@@ -1,0 +1,928 @@
+<script setup>
+import { ref, onMounted } from "vue";
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  TransitionChild,
+  TransitionRoot,
+} from "@headlessui/vue";
+
+import {
+  PlusIcon,
+  ArrowRightIcon,
+  XMarkIcon,
+  InboxIcon,
+  ClockIcon,
+  CheckCircleIcon,
+  ExclamationCircleIcon,
+  CalendarIcon,
+  BuildingOfficeIcon,
+  PaperClipIcon,
+} from "@heroicons/vue/24/outline";
+
+const config = useRuntimeConfig();
+const auth = useAuth();
+const { user } = auth; // Get the user from auth composable
+
+const tickets = ref([]);
+const users = ref([]); // Add users for assignment
+const loading = ref(true);
+const showCreateModal = ref(false);
+const formSubmitting = ref(false);
+const searchQuery = ref("");
+const selectedStatus = ref("all");
+const selectedPriority = ref("all");
+
+const selectedFiles = ref([]);
+const uploadProgress = ref(0);
+const dragOver = ref(false);
+
+const toast = useToast();
+
+// Filtered tickets
+const filteredTickets = computed(() => {
+  return tickets.value.filter((ticket) => {
+    const matchesSearch =
+      ticket.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      ticket.ticket_number.toLowerCase().includes(searchQuery.value.toLowerCase());
+    const matchesStatus =
+      selectedStatus.value === "all" || ticket.status_name === selectedStatus.value;
+    const matchesPriority =
+      selectedPriority.value === "all" || ticket.priority_name === selectedPriority.value;
+
+    return matchesSearch && matchesStatus && matchesPriority;
+  });
+});
+
+// Stats
+const stats = computed(() => [
+  {
+    name: "Total Tickets",
+    value: tickets.value.length,
+    icon: InboxIcon,
+    color: "bg-blue-500",
+    lightColor: "bg-blue-50",
+  },
+  {
+    name: "In Progress",
+    value: tickets.value.filter((t) => t.status_name === "In Progress").length,
+    icon: ClockIcon,
+    color: "bg-amber-500",
+    lightColor: "bg-amber-50",
+  },
+  {
+    name: "Resolved",
+    value: tickets.value.filter((t) => t.status_name === "Resolved").length,
+    icon: CheckCircleIcon,
+    color: "bg-green-500",
+    lightColor: "bg-green-50",
+  },
+  {
+    name: "High Priority",
+    value: tickets.value.filter((t) => t.priority_name === "High").length,
+    icon: ExclamationCircleIcon,
+    color: "bg-red-500",
+    lightColor: "bg-red-50",
+  },
+]);
+
+const newTicket = ref({
+  title: "",
+  description: "",
+  category_id: "",
+  priority_id: "",
+  department_id: "",
+  due_date: "",
+  is_private: false,
+  parent_ticket_id: "",
+  assigned_to: "",
+});
+
+// Form options
+const categories = ref([]);
+const priorities = ref([]);
+const departments = ref([]);
+const existingTickets = ref([]); // For parent ticket selection
+
+const statusColors = {
+  New: "bg-blue-100 text-blue-800",
+  "In Progress": "bg-yellow-100 text-yellow-800",
+  Resolved: "bg-green-100 text-green-800",
+  Closed: "bg-gray-100 text-gray-800",
+};
+
+const priorityColors = {
+  Low: "bg-gray-100 text-gray-800",
+  Medium: "bg-yellow-100 text-yellow-800",
+  High: "bg-red-100 text-red-800",
+  Critical: "bg-red-100 text-red-800",
+};
+
+function handleFileSelect(event) {
+  const files = event.target.files;
+  addFiles(files);
+}
+
+function handleDrop(event) {
+  event.preventDefault();
+  dragOver.value = false;
+  const files = event.dataTransfer.files;
+  addFiles(files);
+}
+
+function addFiles(files) {
+  for (let file of files) {
+    if (file.size > 10 * 1024 * 1024) {
+      // 10MB limit
+      toast.error(`File ${file.name} is too large. Maximum size is 10MB`);
+      continue;
+    }
+    selectedFiles.value.push({
+      file,
+      id: Date.now() + Math.random(),
+      name: file.name,
+      size: formatFileSize(file.size),
+      progress: 0,
+    });
+  }
+}
+
+function removeFile(fileId) {
+  selectedFiles.value = selectedFiles.value.filter((f) => f.id !== fileId);
+}
+
+function formatFileSize(bytes) {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+}
+
+// Fetch reference data
+async function fetchReferenceData() {
+  try {
+    const [categoriesRes, prioritiesRes, departmentsRes, usersRes] = await Promise.all([
+      useFetch(`${config.public.apiBase}/categories`),
+      useFetch(`${config.public.apiBase}/priorities`),
+      useFetch(`${config.public.apiBase}/departments`),
+      useFetch(`${config.public.apiBase}/users`),
+    ]);
+
+    categories.value = categoriesRes.data.value || [];
+    priorities.value = prioritiesRes.data.value || [];
+    departments.value = departmentsRes.data.value || [];
+    users.value = usersRes.data.value || [];
+
+    // Get existing tickets for parent ticket selection
+    const { data: ticketsData } = await useFetch(`${config.public.apiBase}/tickets`);
+    existingTickets.value = ticketsData.value || [];
+  } catch (error) {
+    console.error("Error fetching reference data:", error);
+    toast.error("Failed to load form options");
+  }
+}
+
+// Fetch tickets
+async function fetchTickets() {
+  try {
+    loading.value = true;
+    const { data, error } = await useFetch(`${config.public.apiBase}/tickets`, {
+      headers: {
+        Authorization: `Bearer ${auth.token}`,
+      },
+    });
+
+    if (error.value) {
+      throw error.value;
+    }
+
+    tickets.value = data.value || [];
+  } catch (error) {
+    console.error("Error fetching tickets:", error);
+    toast.error("Failed to load tickets");
+  } finally {
+    loading.value = false;
+  }
+}
+
+// Create ticket
+async function handleSubmit() {
+  const user = JSON.parse(localStorage.getItem("user"));
+  if (formSubmitting.value) return;
+
+  try {
+    formSubmitting.value = true;
+
+    // Format date to ISO string if present
+    const ticketData = {
+      ...newTicket.value,
+      due_date: newTicket.value.due_date
+        ? new Date(newTicket.value.due_date).toISOString()
+        : null,
+      created_by: user.id,
+    };
+
+    // First create the ticket
+    const { data: ticketResponse, error: ticketError } = await useFetch(
+      `${config.public.apiBase}/tickets`,
+      {
+        method: "POST",
+        body: ticketData,
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+        },
+      }
+    );
+
+    if (ticketError.value) throw ticketError.value;
+
+    // Then upload files if any
+    if (selectedFiles.value.length > 0) {
+      for (let fileObj of selectedFiles.value) {
+        const formData = new FormData();
+        formData.append("file", fileObj.file);
+        formData.append("ticket_id", ticketResponse.value.id);
+        formData.append("user_id", user.id);
+
+        const { data: fileResponse, error: fileError } = await useFetch(
+          `${config.public.apiBase}/attachments/upload`,
+          {
+            method: "POST",
+            body: formData,
+            headers: {
+              Authorization: `Bearer ${auth.token}`,
+            },
+          }
+        );
+
+        if (fileError.value) {
+          toast.error(`Failed to upload ${fileObj.name}`);
+          console.error("File upload error:", fileError.value);
+          continue;
+        }
+      }
+    }
+
+    showCreateModal.value = false;
+    toast.success("Ticket created successfully");
+    resetForm();
+    await fetchTickets();
+  } catch (error) {
+    console.error("Error creating ticket:", error);
+    toast.error(error.message || "Failed to create ticket");
+  } finally {
+    formSubmitting.value = false;
+  }
+}
+
+function resetForm() {
+  newTicket.value = {
+    title: "",
+    description: "",
+    category_id: "",
+    priority_id: "",
+    department_id: "",
+    due_date: "",
+    is_private: false,
+    parent_ticket_id: "",
+    assigned_to: "",
+  };
+  selectedFiles.value = [];
+  uploadProgress.value = 0;
+}
+
+// Format date
+function formatDate(date) {
+  return new Date(date).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// Navigation guard
+definePageMeta({
+  middleware: "auth",
+});
+
+onMounted(async () => {
+  await fetchReferenceData();
+  await fetchTickets();
+});
+</script>
+
+<template>
+  <div class="min-h-screen">
+    <!-- Top Header Bar -->
+    <div
+      class="sticky top-0 z-10 bg-white border-b border-gray-200 backdrop-blur-sm bg-white/80 rounded-lg"
+    >
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
+        <div class="flex h-16 items-center justify-between">
+          <!-- Left side -->
+          <div class="flex items-center">
+            <h1
+              class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-600"
+            >
+              Help Desk
+            </h1>
+          </div>
+
+          <!-- Search bar -->
+          <div class="flex-1 max-w-2xl mx-8">
+            <div class="relative">
+              <MagnifyingGlassIcon
+                class="pointer-events-none absolute left-4 top-3.5 h-5 w-5 text-gray-400"
+              />
+              <input
+                type="text"
+                v-model="searchQuery"
+                class="h-12 w-full rounded-full border-0 bg-gray-100 pl-12 pr-4 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm"
+                placeholder="Search tickets..."
+              />
+            </div>
+          </div>
+
+          <!-- Right side -->
+          <div class="flex items-center space-x-4">
+            <button
+              @click="showCreateModal = true"
+              class="inline-flex items-center px-4 py-2.5 rounded-full text-sm font-medium text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:shadow-indigo-500/50"
+            >
+              <PlusIcon class="h-5 w-5 mr-1.5" />
+              New Ticket
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div
+          v-for="stat in stats"
+          :key="stat.name"
+          class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-lg transition-shadow duration-200"
+        >
+          <div class="flex items-center">
+            <div :class="['rounded-xl p-3', stat.lightColor]">
+              <component
+                :is="stat.icon"
+                :class="['h-6 w-6', stat.color.replace('bg-', 'text-')]"
+              />
+            </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-gray-500">{{ stat.name }}</p>
+              <p class="text-2xl font-semibold text-gray-900">{{ stat.value }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters Bar -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-8">
+        <div class="flex items-center space-x-4">
+          <AdjustmentsHorizontalIcon class="h-5 w-5 text-gray-400" />
+          <select
+            v-model="selectedStatus"
+            class="rounded-lg border-gray-200 text-sm focus:ring-indigo-500"
+          >
+            <option value="all">All Status</option>
+            <option>New</option>
+            <option>In Progress</option>
+            <option>Resolved</option>
+            <option>Closed</option>
+          </select>
+          <select
+            v-model="selectedPriority"
+            class="rounded-lg border-gray-200 text-sm focus:ring-indigo-500"
+          >
+            <option value="all">All Priorities</option>
+            <option>High</option>
+            <option>Medium</option>
+            <option>Low</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Tickets Grid -->
+      <div v-if="!loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div
+          v-for="ticket in filteredTickets"
+          :key="ticket.id"
+          class="group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-100 overflow-hidden hover:scale-[1.02]"
+        >
+          <!-- Ticket Header -->
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-sm font-medium text-gray-500">
+                {{ ticket.ticket_number }}
+              </span>
+              <div class="flex items-center space-x-2">
+                <span
+                  class="px-2.5 py-1 rounded-full text-xs font-medium"
+                  :class="statusColors[ticket.status_name]"
+                >
+                  {{ ticket.status_name }}
+                </span>
+                <span
+                  class="px-2.5 py-1 rounded-full text-xs font-medium"
+                  :class="priorityColors[ticket.priority_name]"
+                >
+                  {{ ticket.priority_name }}
+                </span>
+              </div>
+            </div>
+
+            <h3 class="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">
+              {{ ticket.title }}
+            </h3>
+            <p class="text-sm text-gray-600 line-clamp-2 mb-4">
+              {{ ticket.description }}
+            </p>
+
+            <div class="flex items-center justify-between text-sm text-gray-500">
+              <div class="flex items-center">
+                <UserGroupIcon class="h-4 w-4 mr-1.5" />
+                {{ ticket.department_name }}
+              </div>
+              <div class="flex items-center">
+                <CalendarIcon class="h-4 w-4 mr-1.5" />
+                {{ formatDate(ticket.created_at) }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Ticket Footer -->
+          <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
+            <NuxtLink
+              :to="`/tickets/${ticket.id}`"
+              class="flex items-center justify-center text-sm font-medium text-indigo-600 hover:text-indigo-500 group-hover:text-indigo-700"
+            >
+              View Details
+              <ArrowRightIcon
+                class="h-4 w-4 ml-1.5 transition-transform group-hover:translate-x-1"
+              />
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div v-else class="flex justify-center py-12">
+        <svg
+          class="animate-spin h-8 w-8 text-indigo-500"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          />
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          />
+        </svg>
+      </div>
+    </main>
+
+    <!-- Create Ticket Modal -->
+    <TransitionRoot appear :show="showCreateModal" as="template">
+      <Dialog as="div" class="relative z-10" @close="showCreateModal = false">
+        <TransitionChild
+          enter="ease-out duration-300"
+          enter-from="opacity-0"
+          enter-to="opacity-100"
+          leave="ease-in duration-200"
+          leave-from="opacity-100"
+          leave-to="opacity-0"
+        >
+          <div class="fixed inset-0 bg-gray-900/25 backdrop-blur-sm" />
+        </TransitionChild>
+
+        <div class="fixed inset-0 overflow-y-auto">
+          <div class="flex min-h-full items-center justify-center p-4 text-center">
+            <TransitionChild
+              enter="ease-out duration-300"
+              enter-from="opacity-0 scale-95"
+              enter-to="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leave-from="opacity-100 scale-100"
+              leave-to="opacity-0 scale-95"
+            >
+              <!-- Enhanced DialogPanel with complete ticket fields -->
+              <DialogPanel
+                class="w-full max-w-7xl transform overflow-hidden rounded-2xl bg-white p-10 text-left align-middle shadow-xl transition-all mx-4"
+              >
+                <DialogTitle as="div" class="flex items-center justify-between mb-8">
+                  <div>
+                    <h3 class="text-3xl font-semibold text-gray-900">
+                      Create New Ticket
+                    </h3>
+                    <p class="mt-2 text-lg text-gray-500">
+                      Fill in the details for your support request
+                    </p>
+                  </div>
+                  <button
+                    @click="showCreateModal = false"
+                    class="text-gray-400 hover:text-gray-500 focus:outline-none"
+                  >
+                    <XMarkIcon class="h-8 w-8" />
+                  </button>
+                </DialogTitle>
+
+                <form @submit.prevent="handleSubmit" class="space-y-8">
+                  <div class="grid grid-cols-3 gap-8">
+                    <!-- Left Column - Title & Description -->
+                    <div class="col-span-2 space-y-8">
+                      <!-- Title -->
+                      <div>
+                        <label
+                          for="title"
+                          class="block text-lg font-medium text-gray-700 mb-3"
+                          >Title</label
+                        >
+                        <div class="relative rounded-lg shadow-sm">
+                          <input
+                            type="text"
+                            id="title"
+                            v-model="newTicket.title"
+                            required
+                            class="block w-full rounded-lg border-2 border-gray-300 px-4 py-3 text-base focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 hover:border-gray-400 transition-colors duration-200"
+                            placeholder="Brief description of the issue"
+                          />
+                        </div>
+                      </div>
+
+                      <!-- Description -->
+                      <div>
+                        <label
+                          for="description"
+                          class="block text-lg font-medium text-gray-700 mb-3"
+                          >Description</label
+                        >
+                        <div class="relative rounded-lg shadow-sm">
+                          <textarea
+                            id="description"
+                            v-model="newTicket.description"
+                            rows="12"
+                            required
+                            class="block w-full rounded-lg border-2 border-gray-300 px-4 py-3 text-base focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 hover:border-gray-400 transition-colors duration-200 resize-none"
+                            placeholder="Detailed explanation of your issue"
+                          ></textarea>
+                        </div>
+                      </div>
+
+                      <!-- File Upload Section -->
+                      <div class="mt-6">
+                        <label class="block text-lg font-medium text-gray-700 mb-3">
+                          Attachments
+                        </label>
+
+                        <!-- Drag & Drop Zone -->
+                        <div
+                          @dragover.prevent="dragOver = true"
+                          @dragleave.prevent="dragOver = false"
+                          @drop.prevent="handleDrop"
+                          :class="[
+                            'mt-2 flex justify-center rounded-lg border-2 border-dashed px-6 py-10',
+                            dragOver
+                              ? 'border-indigo-500 bg-indigo-50'
+                              : 'border-gray-300 hover:border-indigo-400',
+                          ]"
+                        >
+                          <div class="text-center">
+                            <PaperClipIcon class="mx-auto h-12 w-12 text-gray-400" />
+                            <div class="mt-4 flex text-sm leading-6 text-gray-600">
+                              <label
+                                for="file-upload"
+                                class="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                              >
+                                <span>Upload files</span>
+                                <input
+                                  id="file-upload"
+                                  type="file"
+                                  multiple
+                                  class="sr-only"
+                                  @change="handleFileSelect"
+                                />
+                              </label>
+                              <p class="pl-1">or drag and drop</p>
+                            </div>
+                            <p class="text-xs leading-5 text-gray-600">
+                              Up to 10MB per file
+                            </p>
+                          </div>
+                        </div>
+
+                        <!-- File List -->
+                        <div v-if="selectedFiles.length > 0" class="mt-4">
+                          <div
+                            v-for="file in selectedFiles"
+                            :key="file.id"
+                            class="flex items-center justify-between py-3 pl-3 pr-4 text-sm border rounded-lg mb-2"
+                          >
+                            <div class="flex items-center flex-1 w-0">
+                              <PaperClipIcon
+                                class="h-5 w-5 flex-shrink-0 text-gray-400"
+                              />
+                              <div class="ml-4 flex min-w-0 flex-1 gap-2">
+                                <span class="truncate font-medium">{{ file.name }}</span>
+                                <span class="flex-shrink-0 text-gray-400">{{
+                                  file.size
+                                }}</span>
+                              </div>
+                            </div>
+                            <div class="ml-4 flex-shrink-0">
+                              <button
+                                @click="removeFile(file.id)"
+                                class="font-medium text-red-600 hover:text-red-500"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Due Date and Privacy Settings -->
+                      <div class="grid grid-cols-2 gap-6">
+                        <!-- Due Date -->
+                        <div>
+                          <label
+                            for="dueDate"
+                            class="block text-lg font-medium text-gray-700 mb-3"
+                            >Due Date</label
+                          >
+                          <div class="relative rounded-lg shadow-sm">
+                            <input
+                              type="datetime-local"
+                              id="dueDate"
+                              v-model="newTicket.due_date"
+                              class="block w-full rounded-lg border-2 border-gray-300 px-4 py-3 text-base focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 hover:border-gray-400 transition-colors duration-200"
+                            />
+                          </div>
+                        </div>
+
+                        <!-- Privacy Toggle -->
+                        <div class="flex items-center mt-8">
+                          <div class="relative rounded-lg shadow-sm">
+                            <label class="inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                v-model="newTicket.is_private"
+                                class="sr-only peer"
+                              />
+                              <div
+                                class="relative w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-indigo-600"
+                              ></div>
+                              <span class="ml-3 text-lg font-medium text-gray-700"
+                                >Private Ticket</span
+                              >
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Parent Ticket Reference -->
+                      <div>
+                        <label
+                          for="parentTicket"
+                          class="block text-lg font-medium text-gray-700 mb-3"
+                          >Parent Ticket (Optional)</label
+                        >
+                        <div class="relative rounded-lg shadow-sm">
+                          <select
+                            id="parentTicket"
+                            v-model="newTicket.parent_ticket_id"
+                            class="block w-full rounded-lg border-2 border-gray-300 px-4 py-3 text-base focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 hover:border-gray-400 transition-colors duration-200"
+                          >
+                            <option value="">No parent ticket</option>
+                            <option
+                              v-for="ticket in existingTickets"
+                              :key="ticket.id"
+                              :value="ticket.id"
+                            >
+                              {{ ticket.ticket_number }} - {{ ticket.title }}
+                            </option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="space-y-8">
+                      <!-- Priority Selection -->
+                      <div>
+                        <label class="block text-lg font-medium text-gray-700 mb-4"
+                          >Priority Level</label
+                        >
+                        <div class="space-y-4">
+                          <button
+                            type="button"
+                            @click="newTicket.priority_id = priority.id"
+                            v-for="priority in priorities"
+                            :key="priority.id"
+                            :class="[
+                              'relative flex items-center w-full p-6 rounded-xl border-2 transition-all duration-200',
+                              newTicket.priority_id === priority.id
+                                ? 'border-indigo-600 bg-indigo-50'
+                                : 'border-gray-300 hover:border-indigo-300 hover:bg-gray-50',
+                            ]"
+                          >
+                            <!-- Priority Icon -->
+                            <div
+                              class="w-16 h-16 rounded-full flex items-center justify-center"
+                              :class="{
+                                'bg-red-100': priority.name === 'High',
+                                'bg-yellow-100': priority.name === 'Medium',
+                                'bg-gray-100': priority.name === 'Low',
+                              }"
+                            >
+                              <ExclamationCircleIcon
+                                v-if="priority.name === 'High'"
+                                class="h-10 w-10 text-red-600"
+                              />
+                              <ClockIcon
+                                v-if="priority.name === 'Medium'"
+                                class="h-10 w-10 text-yellow-600"
+                              />
+                              <InboxIcon
+                                v-if="priority.name === 'Low'"
+                                class="h-10 w-10 text-gray-600"
+                              />
+                            </div>
+
+                            <!-- Priority Details -->
+                            <div class="ml-4 flex-1">
+                              <span
+                                class="block text-xl font-medium"
+                                :class="{
+                                  'text-red-700': priority.name === 'High',
+                                  'text-yellow-700': priority.name === 'Medium',
+                                  'text-gray-700': priority.name === 'Low',
+                                }"
+                              >
+                                {{ priority.name }}
+                              </span>
+                              <span class="text-base text-gray-500 mt-1 block">
+                                {{ priority.description }}
+                              </span>
+                            </div>
+
+                            <div
+                              v-if="newTicket.priority_id === priority.id"
+                              class="absolute -top-2 -right-2 bg-indigo-600 rounded-full p-1.5"
+                            >
+                              <CheckCircleIcon class="h-6 w-6 text-white" />
+                            </div>
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- Category -->
+                      <div>
+                        <label
+                          for="category"
+                          class="block text-lg font-medium text-gray-700 mb-3"
+                          >Category</label
+                        >
+                        <div class="relative rounded-lg shadow-sm">
+                          <select
+                            id="category"
+                            v-model="newTicket.category_id"
+                            required
+                            class="block w-full rounded-lg border-2 border-gray-300 px-4 py-3 text-base focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 hover:border-gray-400 transition-colors duration-200"
+                          >
+                            <option value="">Select a category</option>
+                            <option
+                              v-for="category in categories"
+                              :key="category.id"
+                              :value="category.id"
+                            >
+                              {{ category.name }}
+                            </option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <!-- Department -->
+                      <div>
+                        <label
+                          for="department"
+                          class="block text-lg font-medium text-gray-700 mb-3"
+                          >Department</label
+                        >
+                        <div class="relative rounded-lg shadow-sm">
+                          <select
+                            id="department"
+                            v-model="newTicket.department_id"
+                            required
+                            class="block w-full rounded-lg border-2 border-gray-300 px-4 py-3 text-base focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 hover:border-gray-400 transition-colors duration-200"
+                          >
+                            <option value="">Select department</option>
+                            <option
+                              v-for="department in departments"
+                              :key="department.id"
+                              :value="department.id"
+                            >
+                              {{ department.name }}
+                            </option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <!-- Assigned To -->
+                      <div>
+                        <label
+                          for="assignedTo"
+                          class="block text-lg font-medium text-gray-700 mb-3"
+                          >Assign To (Optional)</label
+                        >
+                        <div class="relative rounded-lg shadow-sm">
+                          <select
+                            id="assignedTo"
+                            v-model="newTicket.assigned_to"
+                            class="block w-full rounded-lg border-2 border-gray-300 px-4 py-3 text-base focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 hover:border-gray-400 transition-colors duration-200"
+                          >
+                            <option value="">Select assignee</option>
+                            <option v-for="user in users" :key="user.id" :value="user.id">
+                              {{ user.full_name }}
+                            </option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Form Actions -->
+                  <div class="mt-10 flex justify-end space-x-4">
+                    <button
+                      type="button"
+                      @click="showCreateModal = false"
+                      class="inline-flex justify-center rounded-lg border-2 border-gray-300 bg-white px-8 py-4 text-lg font-medium text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-200"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      :disabled="loading"
+                      class="inline-flex justify-center rounded-lg border-2 border-transparent bg-indigo-600 px-8 py-4 text-lg font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <template v-if="loading">
+                        <svg
+                          class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            class="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            stroke-width="4"
+                          ></circle>
+                          <path
+                            class="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Creating...
+                      </template>
+                      <template v-else> Create Ticket </template>
+                    </button>
+                  </div>
+                </form>
+              </DialogPanel>
+            </TransitionChild>
+          </div>
+        </div>
+      </Dialog>
+    </TransitionRoot>
+  </div>
+</template>
+
+<style>
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+</style>
