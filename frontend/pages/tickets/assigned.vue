@@ -1,5 +1,9 @@
 // pages/tickets/assigned.vue
 <script setup>
+// Add route middleware
+definePageMeta({
+  middleware: ['auth']
+})
 import { ref, onMounted } from "vue";
 import {
   UserIcon,

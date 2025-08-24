@@ -4,13 +4,13 @@ require('dotenv').config();
 
 // Create nodemailer transporter
 const transporter = nodemailer.createTransport({
-    host: process.env.MAIL_HOST,
-    port: process.env.MAIL_PORT,
-    secure: process.env.MAIL_SECURE === 'true',
-    auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS
-    }
+  host: process.env.MAIL_HOST,
+  port: process.env.MAIL_PORT,
+  secure: process.env.MAIL_SECURE === 'true',
+  auth: {
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS
+  }
 });
 
 /**
@@ -25,13 +25,13 @@ const transporter = nodemailer.createTransport({
  * @returns {Promise} - Nodemailer result
  */
 exports.sendTicketAssignmentEmail = async (options) => {
-    const { email, userName, ticketNumber, ticketTitle, ticketUrl, assignedBy } = options;
+  const { email, userName, ticketNumber, ticketTitle, ticketUrl, assignedBy } = options;
 
-    const mailOptions = {
-        from: `"${process.env.MAIL_FROM_NAME}" <${process.env.MAIL_FROM_ADDRESS}>`,
-        to: email,
-        subject: `Ticket Assigned: ${ticketNumber}`,
-        html: `
+  const mailOptions = {
+    from: `"${process.env.MAIL_FROM_NAME}" <${process.env.MAIL_FROM_ADDRESS}>`,
+    to: email,
+    subject: `Ticket Assigned: ${ticketNumber}`,
+    html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background-color: #f8f9fa; padding: 20px; text-align: center;">
           <h1 style="color: #3b82f6; margin: 0;">Ticket System</h1>
@@ -62,9 +62,9 @@ exports.sendTicketAssignmentEmail = async (options) => {
         </div>
       </div>
     `
-    };
+  };
 
-    return transporter.sendMail(mailOptions);
+  return transporter.sendMail(mailOptions);
 };
 
 /**
@@ -82,13 +82,13 @@ exports.sendTicketAssignmentEmail = async (options) => {
  */
 // Updated email template for services/emailService.js
 exports.sendTicketUpdateEmail = async (options) => {
-    const { email, userName, ticketNumber, ticketTitle, ticketUrl, updateType, updateDetails, updatedBy } = options;
+  const { email, userName, ticketNumber, ticketTitle, ticketUrl, updateType, updateDetails, updatedBy } = options;
 
-    const mailOptions = {
-        from: `"${process.env.MAIL_FROM_NAME}" <${process.env.MAIL_FROM_ADDRESS}>`,
-        to: email,
-        subject: `Ticket Updated: ${ticketNumber}`,
-        html: `
+  const mailOptions = {
+    from: `"${process.env.MAIL_FROM_NAME}" <${process.env.MAIL_FROM_ADDRESS}>`,
+    to: email,
+    subject: `Ticket Updated: ${ticketNumber}`,
+    html: `
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -164,19 +164,19 @@ exports.sendTicketUpdateEmail = async (options) => {
         </body>
         </html>
       `
-    };
+  };
 
-    return transporter.sendMail(mailOptions);
+  return transporter.sendMail(mailOptions);
 };
 
 exports.sendTicketAssignmentEmail = async (options) => {
-    const { email, userName, ticketNumber, ticketTitle, ticketUrl, assignedBy } = options;
+  const { email, userName, ticketNumber, ticketTitle, ticketUrl, assignedBy } = options;
 
-    const mailOptions = {
-        from: `"${process.env.MAIL_FROM_NAME}" <${process.env.MAIL_FROM_ADDRESS}>`,
-        to: email,
-        subject: `Ticket Assigned: ${ticketNumber}`,
-        html: `
+  const mailOptions = {
+    from: `"${process.env.MAIL_FROM_NAME}" <${process.env.MAIL_FROM_ADDRESS}>`,
+    to: email,
+    subject: `Ticket Assigned: ${ticketNumber}`,
+    html: `
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -227,7 +227,129 @@ exports.sendTicketAssignmentEmail = async (options) => {
         </body>
         </html>
       `
-    };
+  };
 
-    return transporter.sendMail(mailOptions);
+  return transporter.sendMail(mailOptions);
 };
+
+
+// ฟังก์ชันส่งอีเมลรีเซ็ตรหัสผ่าน
+exports.sendPasswordResetEmail = async ({ email, username, resetUrl }) => {
+  const mailOptions = {
+    from: `"${process.env.MAIL_FROM_NAME}" <${process.env.MAIL_FROM_ADDRESS}>`,
+    to: email,
+    subject: 'Reset Your Password',
+    html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Reset Your Password</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; background-color: #f5f7fa;">
+          <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); margin-top: 20px; margin-bottom: 20px;">
+            <!-- Header -->
+            <tr>
+              <td style="background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%); padding: 30px 20px; text-align: center;">
+                <h1 style="color: #ffffff; margin: 0; font-size: 24px; letter-spacing: 0.5px;">Reset Your Password</h1>
+              </td>
+            </tr>
+            
+            <!-- Content -->
+            <tr>
+              <td style="padding: 30px 25px;">
+                <p style="margin-top: 0; font-size: 16px; line-height: 1.5;">Hello ${username},</p>
+                
+                <p style="font-size: 16px; line-height: 1.5;">We received a request to reset your password. If you didn't make this request, you can ignore this email.</p>
+                
+                <p style="font-size: 16px; line-height: 1.5;">To reset your password, click the button below:</p>
+                
+                <div style="margin: 35px 0; text-align: center;">
+                  <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(to right, #D4AF37, #FFD700); color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; box-shadow: 0 2px 4px rgba(212, 175, 55, 0.3); transition: all 0.3s;">
+                    Reset Password
+                  </a>
+                </div>
+                
+                <p style="font-size: 16px; line-height: 1.5;">This link will expire in 1 hour.</p>
+                
+                <p style="margin-bottom: 0; font-size: 16px; line-height: 1.5;">Thank you,<br>The Support Team</p>
+              </td>
+            </tr>
+            
+            <!-- Footer -->
+            <tr>
+              <td style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+                <p style="margin: 0; font-size: 13px; color: #6b7280;">This is an automated message. Please do not reply to this email.</p>
+                <p style="margin: 10px 0 0; font-size: 13px; color: #6b7280;">© ${new Date().getFullYear()} Ticket System. All rights reserved.</p>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `
+  };
+
+  return transporter.sendMail(mailOptions);
+};
+
+
+
+// ฟังก์ชันส่งอีเมลยืนยันการลงทะเบียน - แก้ไขให้ใช้รูปแบบเดียวกับฟังก์ชันอื่นๆ
+exports.sendRegistrationConfirmationEmail = async ({ email, username }) => {
+  const mailOptions = {
+    from: `"${process.env.MAIL_FROM_NAME}" <${process.env.MAIL_FROM_ADDRESS}>`,
+    to: email,
+    subject: 'Welcome to Our Ticket System',
+    html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Welcome to Our Ticket System</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; background-color: #f5f7fa;">
+          <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); margin-top: 20px; margin-bottom: 20px;">
+            <!-- Header -->
+            <tr>
+              <td style="background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%); padding: 30px 20px; text-align: center;">
+                <h1 style="color: #ffffff; margin: 0; font-size: 24px; letter-spacing: 0.5px;">Welcome to Our Ticket System</h1>
+              </td>
+            </tr>
+            
+            <!-- Content -->
+            <tr>
+              <td style="padding: 30px 25px;">
+                <p style="margin-top: 0; font-size: 16px; line-height: 1.5;">Hello ${username},</p>
+                
+                <p style="font-size: 16px; line-height: 1.5;">Thank you for registering with our ticket support system. Your account has been created successfully.</p>
+                
+                <p style="font-size: 16px; line-height: 1.5;">You can now log in and start using the system.</p>
+                
+                <div style="margin: 35px 0; text-align: center;">
+                  <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/login" style="display: inline-block; background: linear-gradient(to right, #D4AF37, #FFD700); color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; box-shadow: 0 2px 4px rgba(212, 175, 55, 0.3); transition: all 0.3s;">
+                    Login Now
+                  </a>
+                </div>
+                
+                <p style="margin-bottom: 0; font-size: 16px; line-height: 1.5;">Thank you,<br>The Support Team</p>
+              </td>
+            </tr>
+            
+            <!-- Footer -->
+            <tr>
+              <td style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+                <p style="margin: 0; font-size: 13px; color: #6b7280;">This is an automated message. Please do not reply to this email.</p>
+                <p style="margin: 10px 0 0; font-size: 13px; color: #6b7280;">© ${new Date().getFullYear()} Ticket System. All rights reserved.</p>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `
+  };
+
+  return transporter.sendMail(mailOptions);
+};
+

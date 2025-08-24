@@ -14,4 +14,10 @@ router.get('/profile', userController.getProfile);
 router.put('/profile', userController.updateProfile);
 router.get('/', userController.getUsers);
 
+router.post('/change-password',  userController.changePassword);
+
+router.post('/forgot-password', userController.forgotPassword);
+router.post('/reset-password', userController.resetPassword);
+
+
 module.exports = router;

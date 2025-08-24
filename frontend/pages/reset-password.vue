@@ -1,26 +1,26 @@
 <script setup>
 const router = useRouter()
+const route = useRoute()
 const config = useRuntimeConfig()
 
 const formData = ref({
-  username: '',
-  email: '',
-  full_name: '',
   password: '',
   confirm_password: ''
 })
+
+const token = ref('')
+const error = ref('')
+const success = ref('')
+const warning = ref('') // เพิ่มตัวแปร warning
+const loading = ref(false)
+const showPassword = ref(false)
+const showConfirmPassword = ref(false)
+const isPasswordReset = ref(false)
 
 // สำหรับเก็บข้อมูลจาก API Settings
 const appName = ref('Ticket Support System') // ค่าเริ่มต้น
 const logoUrl = ref(null) // URL ของโลโก้
 const apiBaseUrl = 'http://localhost:9000/api' // Base URL ของ API
-const allowRegistration = ref(true) // ค่าเริ่มต้น - อนุญาตให้ลงทะเบียน
-
-const error = ref('')
-const loading = ref(false)
-const showPassword = ref(false)
-const showConfirmPassword = ref(false)
-const agreeToTerms = ref(false)
 
 // ดึงการตั้งค่าระบบจาก API
 const fetchSystemSettings = async () => {
@@ -39,12 +39,6 @@ const fetchSystemSettings = async () => {
           ? response.logo_url 
           : `${apiBaseUrl}${response.logo_url}`;
       }
-
-      // ตรวจสอบว่าระบบอนุญาตให้ลงทะเบียนหรือไม่
-      if (response.allow_registration !== undefined) {
-        // แปลงค่าเป็น boolean (เนื่องจากข้อมูลอาจมาในรูปแบบ string "true"/"false")
-        allowRegistration.value = response.allow_registration === true || response.allow_registration === "true";
-      }
     }
   } catch (error) {
     console.error('Error fetching system settings:', error);
@@ -52,6 +46,7 @@ const fetchSystemSettings = async () => {
   }
 }
 
+// คำนวณความแข็งแรงของรหัสผ่าน
 const passwordStrength = computed(() => {
   const password = formData.value.password
   if (!password) return { score: 0, text: '' }
@@ -74,79 +69,13 @@ const passwordStrength = computed(() => {
   }
 })
 
+// ตรวจสอบความถูกต้องของฟอร์ม
 const isFormValid = computed(() => {
   return (
-    formData.value.username.trim() !== '' &&
-    formData.value.email.trim() !== '' &&
     formData.value.password.length >= 8 &&
-    formData.value.password === formData.value.confirm_password &&
-    agreeToTerms.value
+    formData.value.password === formData.value.confirm_password
   )
 })
-
-const handleRegister = async () => {
-  try {
-    // Reset error state
-    error.value = ''
-    
-    // Check if registration is allowed
-    if (!allowRegistration.value) {
-      error.value = 'Registration is currently disabled. Please contact administrator.'
-      return
-    }
-    
-    // Validate form
-    if (!isFormValid.value) {
-      if (formData.value.password !== formData.value.confirm_password) {
-        error.value = 'Passwords do not match'
-      } else if (formData.value.password.length < 8) {
-        error.value = 'Password must be at least 8 characters long'
-      } else if (!agreeToTerms.value) {
-        error.value = 'You must agree to the terms and conditions'
-      } else {
-        error.value = 'Please fill in all required fields'
-      }
-      return
-    }
-    
-    loading.value = true
-
-    // Make API call to register
-    const response = await fetch(`${config.public.apiBase}/users/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        username: formData.value.username,
-        email: formData.value.email,
-        full_name: formData.value.full_name,
-        password: formData.value.password
-      })
-    })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Registration failed')
-    }
-
-    // Use process.client to check if we're on the client side
-    if (process.client) {
-      // Store token and user data
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('user', JSON.stringify(data.user))
-    }
-
-    // Redirect to dashboard
-    router.push('/')
-  } catch (err) {
-    error.value = err.message || 'An error occurred during registration'
-    console.error('Registration error:', err)
-  } finally {
-    loading.value = false
-  }
-}
 
 // Toggle password visibility
 const togglePasswordVisibility = (field) => {
@@ -157,60 +86,130 @@ const togglePasswordVisibility = (field) => {
   }
 }
 
-// Check if user is already logged in
+// สำหรับรีเซ็ตรหัสผ่าน
+const handleResetPassword = async () => {
+  try {
+    // รีเซ็ตสถานะข้อผิดพลาดและความสำเร็จ
+    error.value = ''
+    success.value = ''
+    
+    // ตรวจสอบความถูกต้องของฟอร์ม
+    if (!isFormValid.value) {
+      if (formData.value.password !== formData.value.confirm_password) {
+        error.value = 'Passwords do not match'
+      } else if (formData.value.password.length < 8) {
+        error.value = 'Password must be at least 8 characters long'
+      } else {
+        error.value = 'Please fill in all required fields'
+      }
+      return
+    }
+    
+    loading.value = true
+    
+    console.log('Sending reset password request with token:', token.value);
+    
+    // ส่งคำขอรีเซ็ตรหัสผ่านไปยัง API
+    const response = await fetch(`${apiBaseUrl}/users/reset-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        token: token.value,
+        password: formData.value.password
+      })
+    })
+    
+    const data = await response.json()
+    
+    console.log('Reset password response:', data);
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to reset password')
+    }
+    
+    // แสดงข้อความสำเร็จ
+    success.value = 'Your password has been reset successfully'
+    isPasswordReset.value = true
+    
+  } catch (err) {
+    // กรณีที่เกิดข้อผิดพลาด
+    error.value = err.message || 'An error occurred. Please try again'
+    console.error('Reset password error:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+// กลับไปยังหน้า login
+const goToLogin = () => {
+  router.push('/login')
+}
+
+// ตรวจสอบว่ามี token หรือไม่
 onMounted(async () => {
   if (process.client) {
-    const token = localStorage.getItem('token')
-    if (token) {
-      router.push('/')
+    console.log('Page mounted, checking query parameters');
+    
+    // ดึง token จาก query parameter
+    token.value = route.query.token || '';
+    console.log('Token from URL:', token.value);
+    
+    if (!token.value) {
+      error.value = 'Invalid or missing reset token';
+      console.log('No token found, will redirect to forgot-password');
+      // หากไม่มี token ให้ redirect ไปหน้า forgot-password หลังจากรอสักครู่
+      setTimeout(() => {
+        router.push('/forgot-password');
+      }, 3000);
+      return;
+    }
+    
+    // ไม่ต้อง redirect ถึงแม้จะมี token ใน localStorage
+    const authToken = localStorage.getItem('token');
+    if (authToken) {
+      warning.value = 'You are currently logged in. Resetting your password will log you out from all devices.';
+      console.log('User is logged in, showing warning');
     }
   }
   
   // ดึงการตั้งค่าระบบ
-  await fetchSystemSettings()
-  
-  // ถ้าระบบไม่อนุญาตให้ลงทะเบียน และไม่มี token ให้ redirect ไปหน้า login
-  if (!allowRegistration.value && !localStorage.getItem('token')) {
-    router.push('/login')
-    // ใช้ setTimeout เพื่อให้ redirect เกิดขึ้นหลังจาก component ถูก mounted
-    setTimeout(() => {
-      toast.error('Registration is currently disabled. Please contact administrator.')
-    }, 500)
-  }
-})
+  await fetchSystemSettings();
+});
 </script>
 
 <template>
   <div class="min-h-screen  flex  justify-center p-4">
-    <div class="w-full max-w-lg">
+    <div class="w-full max-w-md">
       <div class="text-center mb-8">
         <div class="inline-block p-2 bg-white rounded-xl shadow-xl mb-4">
           <!-- แสดงโลโก้จาก API หากมี -->
           <img v-if="logoUrl" :src="logoUrl" alt="Logo" class="h-16 w-auto" />
           <!-- โลโก้ fallback ถ้าไม่มี logoUrl -->
-          <div v-else class="h-16 w-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+          <div v-else class="h-16 w-16 bg-gradient-to-r from-amber-500 to-yellow-500 rounded-lg flex items-center justify-center">
             <span class="text-white font-bold text-2xl">TS</span>
           </div>
         </div>
-        <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-yellow-400 gold-shimmer">Create Account</h1>
-        <p class="text-gray-500 mt-2">Sign up for a new {{ appName }} account</p>
+        <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-yellow-400 gold-shimmer">Reset Password</h1>
+        <p class="text-gray-500 mt-2">Create a new password for your account</p>
       </div>
       
       <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-        <!-- Registration Disabled Alert -->
-        <div v-if="!allowRegistration" class="bg-yellow-50 border-l-4 border-yellow-500 p-4">
+        <!-- Warning Alert -->
+        <div v-if="warning" class="bg-yellow-50 border-l-4 border-yellow-500 p-4">
           <div class="flex">
             <div class="flex-shrink-0">
               <svg class="h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
               </svg>
             </div>
             <div class="ml-3">
-              <p class="text-sm text-yellow-700">Registration is currently disabled. Please contact administrator.</p>
+              <p class="text-sm text-yellow-700">{{ warning }}</p>
             </div>
           </div>
         </div>
-
+        
         <!-- Error Alert -->
         <div v-if="error" class="bg-red-50 border-l-4 border-red-500 p-4">
           <div class="flex">
@@ -225,72 +224,42 @@ onMounted(async () => {
           </div>
         </div>
         
+        <!-- Success Alert -->
+        <div v-if="success" class="bg-green-50 border-l-4 border-green-500 p-4">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm text-green-700">{{ success }}</p>
+            </div>
+          </div>
+        </div>
+        
         <div class="p-8">
-          <form @submit.prevent="handleRegister" class="space-y-6">
-            <!-- Form fields from previous code remain the same -->
-            <!-- Username -->
-            <div class="space-y-2">
-              <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
-              <div class="relative rounded-md shadow-sm">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-                  </svg>
-                </div>
-                <input
-                  id="username"
-                  v-model="formData.username"
-                  type="text"
-                  required
-                  class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
-                  placeholder="johndoe"
-                />
-              </div>
+          <!-- Password Reset Success View -->
+          <div v-if="isPasswordReset" class="text-center space-y-6">
+            <div class="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-green-100">
+              <svg class="h-10 w-10 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
             </div>
-
-            <!-- Email -->
+            <p class="text-gray-700">Your password has been reset successfully. You can now log in with your new password.</p>
+            <button
+              @click="goToLogin"
+              class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all duration-200"
+            >
+              Go to Login
+            </button>
+          </div>
+          
+          <!-- Reset Password Form -->
+          <form v-else-if="token" @submit.prevent="handleResetPassword" class="space-y-6">
+            <!-- New Password -->
             <div class="space-y-2">
-              <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
-              <div class="relative rounded-md shadow-sm">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                  </svg>
-                </div>
-                <input
-                  id="email"
-                  v-model="formData.email"
-                  type="email"
-                  required
-                  class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
-                  placeholder="you@example.com"
-                />
-              </div>
-            </div>
-
-            <!-- Full Name -->
-            <div class="space-y-2">
-              <label for="full_name" class="block text-sm font-medium text-gray-700">Full name</label>
-              <div class="relative rounded-md shadow-sm">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                  </svg>
-                </div>
-                <input
-                  id="full_name"
-                  v-model="formData.full_name"
-                  type="text"
-                  class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
-                  placeholder="John Doe"
-                />
-              </div>
-            </div>
-
-            <!-- Password -->
-            <div class="space-y-2">
-              <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+              <label for="password" class="block text-sm font-medium text-gray-700">New password</label>
               <div class="relative rounded-md shadow-sm">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -302,7 +271,7 @@ onMounted(async () => {
                   v-model="formData.password"
                   :type="showPassword ? 'text' : 'password'"
                   required
-                  class="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+                  class="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
                   placeholder="••••••••"
                 />
                 <button 
@@ -347,7 +316,7 @@ onMounted(async () => {
                   v-model="formData.confirm_password"
                   :type="showConfirmPassword ? 'text' : 'password'"
                   required
-                  class="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+                  class="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
                   placeholder="••••••••"
                 />
                 <button 
@@ -370,61 +339,66 @@ onMounted(async () => {
               </p>
             </div>
 
-            <!-- Terms and Conditions -->
-            <div class="flex items-start">
-              <div class="flex items-center h-5">
-                <input
-                  id="terms"
-                  v-model="agreeToTerms"
-                  type="checkbox"
-                  class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded transition-all duration-200"
-                />
-              </div>
-              <div class="ml-3 text-sm">
-                <label for="terms" class="font-medium text-gray-700">I agree to the terms and conditions</label>
-                <p class="text-gray-500">By creating an account, you agree to our <a href="#" class="text-indigo-600 hover:text-indigo-500">Terms of Service</a> and <a href="#" class="text-indigo-600 hover:text-indigo-500">Privacy Policy</a>.</p>
-              </div>
-            </div>
-
             <!-- Submit Button -->
             <div>
               <button
                 type="submit"
-                :disabled="loading || !isFormValid || !allowRegistration"
-                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white  bg-gradient-to-r from-amber-500 to-yellow-400 gold-shimmer hover:from-amber-500 hover:to-yellow-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="loading || !isFormValid"
+                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg v-if="loading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                {{ loading ? 'Creating account...' : 'Create account' }}
+                {{ loading ? 'Resetting...' : 'Reset Password' }}
               </button>
             </div>
           </form>
 
-          <!-- Login Link -->
-          <div class="mt-6 text-center">
-            <p class="text-sm text-gray-600">
-              Already have an account?
-              <NuxtLink 
-                to="/login"
-                class="font-medium text-indigo-600 hover:text-indigo-500 transition-all duration-200"
-              >
-                Sign in instead
-              </NuxtLink>
-            </p>
+          <!-- Invalid Token View -->
+          <div v-else class="text-center space-y-6">
+            <div class="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-red-100">
+              <svg class="h-10 w-10 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <p class="text-gray-700">Invalid or missing reset token. Please request a new password reset link.</p>
+            <button
+              @click="router.push('/forgot-password')"
+              class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all duration-200"
+            >
+              Reset Password
+            </button>
           </div>
         </div>
       </div>
       
       <div class="mt-8 text-center text-sm text-gray-500">
-        <p>© {{ new Date().getFullYear() }} {{ appName }}. All rights reserved. | Develop by LBB IT Department</p>
+        <p>© {{ new Date().getFullYear() }} {{ appName }}. All rights reserved.</p>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
+/* เพิ่ม effect ประกายทองคำ */
+.gold-shimmer {
+  background-size: 200% auto;
+  animation: shimmer 2s linear infinite;
+  background-image: linear-gradient(to right, #D4AF37 0%, #FFF176 25%, #FFD700 50%, #FFF176 75%, #D4AF37 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 0% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
 /* เพิ่ม shadow hover effect */
 .shadow-xl:hover {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);

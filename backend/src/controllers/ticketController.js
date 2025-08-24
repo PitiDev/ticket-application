@@ -4,23 +4,111 @@ const db = require('../config/database');
 // Get all tickets
 exports.getTickets = async (req, res) => {
     try {
-        const [tickets] = await db.execute(`
+        // รับค่าพารามิเตอร์สำหรับ pagination จาก query string
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+
+        // รับพารามิเตอร์สำหรับการกรอง
+        const status = req.query.status || null;
+        const priority = req.query.priority || null;
+        const department = req.query.department || null;
+        const search = req.query.search || null;
+        const assignedTo = req.query.assignedTo || null;
+        const createdBy = req.query.createdBy || null;
+        
+        // สร้าง conditions สำหรับการกรอง
+        let conditions = [];
+        let parameters = [];
+        
+        if (status) {
+            conditions.push('s.name = ?');
+            parameters.push(status);
+        }
+        
+        if (priority) {
+            conditions.push('p.name = ?');
+            parameters.push(priority);
+        }
+        
+        if (department) {
+            conditions.push('d.name = ?');
+            parameters.push(department);
+        }
+        
+        if (search) {
+            conditions.push('(t.title LIKE ? OR t.description LIKE ? OR t.ticket_number LIKE ?)');
+            parameters.push(`%${search}%`, `%${search}%`, `%${search}%`);
+        }
+        
+        if (assignedTo) {
+            conditions.push('t.assigned_to = ?');
+            parameters.push(assignedTo);
+        }
+        
+        if (createdBy) {
+            conditions.push('t.created_by = ?');
+            parameters.push(createdBy);
+        }
+        
+        // สร้าง WHERE clause ถ้ามีเงื่อนไขการกรอง
+        const whereClause = conditions.length > 0 
+            ? `WHERE ${conditions.join(' AND ')}` 
+            : '';
+        
+        // คำสั่ง SQL สำหรับนับจำนวนรายการทั้งหมด
+        const countQuery = `
+            SELECT COUNT(*) as total
+            FROM tickets t
+            LEFT JOIN statuses s ON t.status_id = s.id
+            LEFT JOIN priorities p ON t.priority_id = p.id
+            LEFT JOIN departments d ON t.department_id = d.id
+            ${whereClause}
+        `;
+        
+        // คำสั่ง SQL สำหรับดึงข้อมูลพร้อม pagination
+        const dataQuery = `
             SELECT t.*, 
                    u.username as created_by_name,
                    s.name as status_name,
                    p.name as priority_name,
                    c.name as category_name,
-                   d.name as department_name
+                   d.name as department_name,
+                   assigned.username as assigned_to_name,
+                   assigned.full_name as assigned_full_name
             FROM tickets t
             LEFT JOIN users u ON t.created_by = u.id
             LEFT JOIN statuses s ON t.status_id = s.id
             LEFT JOIN priorities p ON t.priority_id = p.id
             LEFT JOIN categories c ON t.category_id = c.id
             LEFT JOIN departments d ON t.department_id = d.id
+            LEFT JOIN users assigned ON t.assigned_to = assigned.id
+            ${whereClause}
             ORDER BY t.created_at DESC
-        `);
-
-        res.json(tickets);
+            LIMIT ?, ?
+        `;
+        
+        // ดึงข้อมูลจำนวนรายการทั้งหมด
+        const [countResult] = await db.execute(countQuery, parameters);
+        const totalItems = countResult[0].total;
+        const totalPages = Math.ceil(totalItems / limit);
+        
+        // ดึงข้อมูล tickets ตาม pagination
+        const paginationParams = [...parameters, offset, limit];
+        const [tickets] = await db.execute(dataQuery, paginationParams);
+        
+        // ส่งข้อมูลที่ได้พร้อมกับข้อมูล pagination
+        res.json({
+            data: tickets,
+            pagination: {
+                page,
+                limit,
+                totalItems,
+                totalPages,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1
+            }
+        });
     } catch (error) {
         console.error('Error getting tickets:', error);
         res.status(500).json({ message: 'Error retrieving tickets', error: error.message });
@@ -189,29 +277,7 @@ exports.createTicket = async (req, res) => {
             // Import email service
             const emailService = require('../services/emailService');
 
-            // Notify department managers (if applicable)
-            // if (department_id) {
-            //     const [departmentManagers] = await conn.execute(`
-            //         SELECT u.email, u.username, u.full_name
-            //         FROM users u
-            //         WHERE u.role = 'manager' AND u.department_id = ?
-            //     `, [department_id]);
 
-            //     if (departmentManagers.length > 0) {
-            //         for (const manager of departmentManagers) {
-            //             await emailService.sendTicketUpdateEmail({
-            //                 email: manager.email,
-            //                 userName: manager.full_name || manager.username,
-            //                 ticketNumber: ticketNumber,
-            //                 ticketTitle: title,
-            //                 ticketUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/tickets/${result.insertId}`,
-            //                 updateType: 'New Ticket',
-            //                 updateDetails: `A new ticket has been created in your department: ${ticket[0].department_name}`,
-            //                 updatedBy: creatorName
-            //             });
-            //         }
-            //     }
-            // }
 
             // Notify the assignee if the ticket is assigned during creation
             if (assigneeDetails && assigneeDetails.email) {
