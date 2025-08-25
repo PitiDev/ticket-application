@@ -1,10 +1,10 @@
 <template>
-    <div class="min-h-screen bg-slate-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="min-h-screen to-red-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-0">
             <!-- Header -->
             <div class="mb-8 fade-in-up">
-                <h1 class="text-3xl font-bold text-slate-900">Your Profile</h1>
-                <p class="mt-2 text-base text-slate-600">
+                <h1 class="text-3xl font-bold bg-gradient-to-r from-amber-600 to-red-600 bg-clip-text text-transparent">Your Profile</h1>
+                <p class="mt-2 text-base text-gray-600">
                     Manage your account information and password
                 </p>
             </div>
@@ -13,23 +13,23 @@
             <div v-if="loading" class="flex justify-center py-16 fade-in">
                 <div class="flex flex-col items-center">
                     <div class="relative">
-                        <div class="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin">
+                        <div class="w-16 h-16 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin">
                         </div>
                     </div>
-                    <p class="mt-4 text-slate-700 font-medium">Loading your profile...</p>
+                    <p class="mt-4 text-gray-700 font-medium">Loading your profile...</p>
                 </div>
             </div>
 
             <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-8 fade-in-up">
                 <!-- Profile Information Section -->
                 <div class="lg:col-span-2 space-y-6">
-                    <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover">
-                        <div class="px-6 py-5 bg-white border-b border-slate-100 flex justify-between items-center">
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover border border-amber-100">
+                        <div class="px-6 py-5 bg-gradient-to-r from-amber-50 to-red-50 border-b border-amber-100 flex justify-between items-center">
                             <div>
-                                <h3 class="text-lg font-semibold text-slate-900">Profile Information</h3>
-                                <p class="mt-1 text-sm text-slate-500">Personal details and contact information</p>
+                                <h3 class="text-lg font-semibold text-gray-900">Profile Information</h3>
+                                <p class="mt-1 text-sm text-amber-700">Personal details and contact information</p>
                             </div>
-                            <span class="text-xs font-medium text-slate-500">Last updated: {{ lastUpdated }}</span>
+                            <span class="text-xs font-medium text-amber-600 bg-amber-100 px-2 py-1 rounded-full">Last updated: {{ lastUpdated }}</span>
                         </div>
 
                         <div class="p-6">
@@ -40,7 +40,7 @@
                                         <div class="flex items-center">
                                             <div class="relative group">
                                                 <div
-                                                    class="h-24 w-24 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white text-3xl font-medium shadow-md group-hover:shadow-indigo-200 transition duration-300">
+                                                    class="h-24 w-24 rounded-xl bg-gradient-to-br from-amber-500 to-red-500 flex items-center justify-center text-white text-3xl font-medium shadow-lg group-hover:shadow-amber-200 transition duration-300">
                                                     {{ userInitials }}
                                                 </div>
                                                 <div
@@ -52,9 +52,9 @@
                                                 </div>
                                             </div>
                                             <div class="ml-6">
-                                                <h3 class="text-lg font-medium text-slate-900">{{ profileForm.full_name
+                                                <h3 class="text-lg font-medium text-gray-900">{{ profileForm.full_name
                                                     }}</h3>
-                                                <p class="text-sm text-slate-500">{{ profileForm.job_title }}</p>
+                                                <p class="text-sm text-amber-600">{{ profileForm.job_title }}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -62,54 +62,54 @@
                                     <!-- Username -->
                                     <div class="col-span-6 sm:col-span-3">
                                         <label for="username"
-                                            class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                                            class="block text-sm font-medium text-gray-700 mb-1">Username</label>
                                         <input type="text" name="username" id="username" v-model="profileForm.username"
                                             readonly
-                                            class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 text-sm transition focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
-                                        <p class="mt-1 text-xs text-slate-500">Username cannot be changed</p>
+                                            class="w-full px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-gray-800 text-sm transition focus:ring-2 focus:ring-amber-500 focus:border-amber-500" />
+                                        <p class="mt-1 text-xs text-amber-600">Username cannot be changed</p>
                                     </div>
 
                                     <!-- Email -->
                                     <div class="col-span-6 sm:col-span-3">
-                                        <label for="email" class="block text-sm font-medium text-slate-700 mb-1">Email
+                                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email
                                             address</label>
                                         <input type="email" name="email" id="email" v-model="profileForm.email"
-                                            class="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-slate-800 text-sm transition focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                                            class="w-full px-4 py-2.5 border border-amber-200 rounded-lg text-gray-800 text-sm transition focus:ring-2 focus:ring-amber-500 focus:border-amber-500 hover:border-amber-300" />
                                     </div>
 
                                     <!-- Full Name -->
                                     <div class="col-span-6 sm:col-span-3">
                                         <label for="full_name"
-                                            class="block text-sm font-medium text-slate-700 mb-1">Full
+                                            class="block text-sm font-medium text-gray-700 mb-1">Full
                                             name</label>
                                         <input type="text" name="full_name" id="full_name"
                                             v-model="profileForm.full_name"
-                                            class="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-slate-800 text-sm transition focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                                            class="w-full px-4 py-2.5 border border-amber-200 rounded-lg text-gray-800 text-sm transition focus:ring-2 focus:ring-amber-500 focus:border-amber-500 hover:border-amber-300" />
                                     </div>
 
                                     <!-- Job Title -->
                                     <div class="col-span-6 sm:col-span-3">
-                                        <label for="job_title" class="block text-sm font-medium text-slate-700 mb-1">Job
+                                        <label for="job_title" class="block text-sm font-medium text-gray-700 mb-1">Job
                                             title</label>
                                         <input type="text" name="job_title" id="job_title"
                                             v-model="profileForm.job_title"
-                                            class="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-slate-800 text-sm transition focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                                            class="w-full px-4 py-2.5 border border-amber-200 rounded-lg text-gray-800 text-sm transition focus:ring-2 focus:ring-amber-500 focus:border-amber-500 hover:border-amber-300" />
                                     </div>
 
                                     <!-- Department -->
                                     <div class="col-span-6 sm:col-span-3">
                                         <label for="department"
-                                            class="block text-sm font-medium text-slate-700 mb-1">Department</label>
+                                            class="block text-sm font-medium text-gray-700 mb-1">Department</label>
                                         <div class="relative">
                                             <select id="department" name="department"
                                                 v-model="profileForm.department_id"
-                                                class="appearance-none w-full px-4 py-2.5 border border-slate-200 rounded-lg text-slate-800 text-sm transition focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                                class="appearance-none w-full px-4 py-2.5 border border-amber-200 rounded-lg text-gray-800 text-sm transition focus:ring-2 focus:ring-amber-500 focus:border-amber-500 hover:border-amber-300">
                                                 <option v-for="dept in departments" :key="dept.id" :value="dept.id">
                                                     {{ dept.name }}
                                                 </option>
                                             </select>
                                             <div
-                                                class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                                                class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-amber-500">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -121,17 +121,17 @@
 
                                     <!-- Phone -->
                                     <div class="col-span-6 sm:col-span-3">
-                                        <label for="phone" class="block text-sm font-medium text-slate-700 mb-1">Phone
+                                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone
                                             number</label>
                                         <input type="text" name="phone" id="phone" v-model="profileForm.phone"
-                                            class="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-slate-800 text-sm transition focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                                            class="w-full px-4 py-2.5 border border-amber-200 rounded-lg text-gray-800 text-sm transition focus:ring-2 focus:ring-amber-500 focus:border-amber-500 hover:border-amber-300" />
                                     </div>
                                 </div>
 
                                 <!-- Submit Button -->
                                 <div class="mt-8 flex justify-end">
                                     <button type="submit" :disabled="profileSubmitting"
-                                        class="inline-flex items-center justify-center py-2.5 px-6 border border-transparent rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm hover:shadow transition-all duration-200">
+                                        class="inline-flex items-center justify-center py-2.5 px-6 border border-transparent rounded-lg text-sm font-medium text-white bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-700 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-70 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
                                         <template v-if="profileSubmitting">
                                             <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
                                                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -161,10 +161,10 @@
                 <!-- Right Side -->
                 <div class="space-y-6">
                     <!-- Change Password Section -->
-                    <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover">
-                        <div class="px-6 py-5 bg-white border-b border-slate-100">
-                            <h3 class="text-lg font-semibold text-slate-900">Change Password</h3>
-                            <p class="mt-1 text-sm text-slate-500">Update your password securely</p>
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover border border-amber-100">
+                        <div class="px-6 py-5 bg-gradient-to-r from-amber-50 to-red-50 border-b border-amber-100">
+                            <h3 class="text-lg font-semibold text-gray-900">Change Password</h3>
+                            <p class="mt-1 text-sm text-amber-700">Update your password securely</p>
                         </div>
 
                         <div class="p-6">
@@ -173,17 +173,17 @@
                                     <!-- Current Password -->
                                     <div>
                                         <label for="current_password"
-                                            class="block text-sm font-medium text-slate-700 mb-1">Current
+                                            class="block text-sm font-medium text-gray-700 mb-1">Current
                                             password</label>
                                         <div class="relative rounded-lg shadow-sm">
                                             <input :type="showCurrentPassword ? 'text' : 'password'"
                                                 name="current_password" id="current_password"
                                                 v-model="passwordForm.current_password" required
-                                                class="w-full pl-4 pr-10 py-2.5 border border-slate-200 rounded-lg text-slate-800 text-sm transition focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                class="w-full pl-4 pr-10 py-2.5 border border-amber-200 rounded-lg text-gray-800 text-sm transition focus:ring-2 focus:ring-amber-500 focus:border-amber-500 hover:border-amber-300"
                                                 placeholder="••••••••" />
                                             <button type="button" @click="showCurrentPassword = !showCurrentPassword"
                                                 class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                                                <svg v-if="showCurrentPassword" class="h-5 w-5 text-slate-400"
+                                                <svg v-if="showCurrentPassword" class="h-5 w-5 text-amber-400"
                                                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -191,7 +191,7 @@
                                                         stroke-width="2"
                                                         d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                 </svg>
-                                                <svg v-else class="h-5 w-5 text-slate-400" fill="none"
+                                                <svg v-else class="h-5 w-5 text-amber-400" fill="none"
                                                     viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2"
@@ -204,16 +204,16 @@
                                     <!-- New Password -->
                                     <div>
                                         <label for="new_password"
-                                            class="block text-sm font-medium text-slate-700 mb-1">New
+                                            class="block text-sm font-medium text-gray-700 mb-1">New
                                             password</label>
                                         <div class="relative rounded-lg shadow-sm">
                                             <input :type="showNewPassword ? 'text' : 'password'" name="new_password"
                                                 id="new_password" v-model="passwordForm.new_password" required
-                                                class="w-full pl-4 pr-10 py-2.5 border border-slate-200 rounded-lg text-slate-800 text-sm transition focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                class="w-full pl-4 pr-10 py-2.5 border border-amber-200 rounded-lg text-gray-800 text-sm transition focus:ring-2 focus:ring-amber-500 focus:border-amber-500 hover:border-amber-300"
                                                 placeholder="••••••••" />
                                             <button type="button" @click="showNewPassword = !showNewPassword"
                                                 class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                                                <svg v-if="showNewPassword" class="h-5 w-5 text-slate-400" fill="none"
+                                                <svg v-if="showNewPassword" class="h-5 w-5 text-amber-400" fill="none"
                                                     viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -221,7 +221,7 @@
                                                         stroke-width="2"
                                                         d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                 </svg>
-                                                <svg v-else class="h-5 w-5 text-slate-400" fill="none"
+                                                <svg v-else class="h-5 w-5 text-amber-400" fill="none"
                                                     viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2"
@@ -232,19 +232,19 @@
                                         <div class="mt-2">
                                             <div class="flex items-center">
                                                 <div
-                                                    :class="[passwordStrength >= 1 ? 'bg-indigo-500' : 'bg-slate-200', 'h-1 w-1/4 rounded-full mr-1']">
+                                                    :class="[passwordStrength >= 1 ? 'bg-amber-500' : 'bg-gray-200', 'h-1 w-1/4 rounded-full mr-1 transition-colors']">
                                                 </div>
                                                 <div
-                                                    :class="[passwordStrength >= 2 ? 'bg-indigo-500' : 'bg-slate-200', 'h-1 w-1/4 rounded-full mr-1']">
+                                                    :class="[passwordStrength >= 2 ? 'bg-amber-500' : 'bg-gray-200', 'h-1 w-1/4 rounded-full mr-1 transition-colors']">
                                                 </div>
                                                 <div
-                                                    :class="[passwordStrength >= 3 ? 'bg-indigo-500' : 'bg-slate-200', 'h-1 w-1/4 rounded-full mr-1']">
+                                                    :class="[passwordStrength >= 3 ? 'bg-amber-500' : 'bg-gray-200', 'h-1 w-1/4 rounded-full mr-1 transition-colors']">
                                                 </div>
                                                 <div
-                                                    :class="[passwordStrength >= 4 ? 'bg-indigo-500' : 'bg-slate-200', 'h-1 w-1/4 rounded-full']">
+                                                    :class="[passwordStrength >= 4 ? 'bg-red-500' : 'bg-gray-200', 'h-1 w-1/4 rounded-full transition-colors']">
                                                 </div>
                                             </div>
-                                            <p class="mt-1 text-xs text-slate-500">Password must be at least 8
+                                            <p class="mt-1 text-xs text-amber-600">Password must be at least 8
                                                 characters</p>
                                         </div>
                                     </div>
@@ -252,17 +252,17 @@
                                     <!-- Confirm New Password -->
                                     <div>
                                         <label for="confirm_password"
-                                            class="block text-sm font-medium text-slate-700 mb-1">Confirm
+                                            class="block text-sm font-medium text-gray-700 mb-1">Confirm
                                             new password</label>
                                         <div class="relative rounded-lg shadow-sm">
                                             <input :type="showConfirmPassword ? 'text' : 'password'"
                                                 name="confirm_password" id="confirm_password"
                                                 v-model="passwordForm.confirm_password" required
-                                                class="w-full pl-4 pr-10 py-2.5 border border-slate-200 rounded-lg text-slate-800 text-sm transition focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                class="w-full pl-4 pr-10 py-2.5 border border-amber-200 rounded-lg text-gray-800 text-sm transition focus:ring-2 focus:ring-amber-500 focus:border-amber-500 hover:border-amber-300"
                                                 placeholder="••••••••" />
                                             <button type="button" @click="showConfirmPassword = !showConfirmPassword"
                                                 class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                                                <svg v-if="showConfirmPassword" class="h-5 w-5 text-slate-400"
+                                                <svg v-if="showConfirmPassword" class="h-5 w-5 text-amber-400"
                                                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -270,7 +270,7 @@
                                                         stroke-width="2"
                                                         d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                 </svg>
-                                                <svg v-else class="h-5 w-5 text-slate-400" fill="none"
+                                                <svg v-else class="h-5 w-5 text-amber-400" fill="none"
                                                     viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2"
@@ -281,10 +281,10 @@
                                     </div>
 
                                     <!-- Password Error Message -->
-                                    <div v-if="passwordError" class="rounded-lg bg-red-50 p-4 mt-2 mb-2">
+                                    <div v-if="passwordError" class="rounded-lg bg-red-50 p-4 mt-2 mb-2 border border-red-200">
                                         <div class="flex">
                                             <div class="flex-shrink-0">
-                                                <svg class="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24"
+                                                <svg class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24"
                                                     stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2"
@@ -300,7 +300,7 @@
                                     <!-- Submit Button -->
                                     <div class="mt-6">
                                         <button type="submit" :disabled="passwordSubmitting || !canSubmitPassword"
-                                            class="w-full inline-flex items-center justify-center py-2.5 px-4 border border-transparent rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm hover:shadow transition-all duration-200">
+                                            class="w-full inline-flex items-center justify-center py-2.5 px-4 border border-transparent rounded-lg text-sm font-medium text-white bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-700 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-70 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
                                             <template v-if="passwordSubmitting">
                                                 <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
                                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -323,37 +323,37 @@
                     </div>
 
                     <!-- Account Info Card -->
-                    <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover">
-                        <div class="px-6 py-5 bg-white border-b border-slate-100">
-                            <h3 class="text-lg font-semibold text-slate-900">Account Information</h3>
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover border border-amber-100">
+                        <div class="px-6 py-5 bg-gradient-to-r from-amber-50 to-red-50 border-b border-amber-100">
+                            <h3 class="text-lg font-semibold text-gray-900">Account Information</h3>
                         </div>
 
                         <div class="p-6">
                             <dl class="space-y-4">
                                 <div class="flex justify-between items-center">
-                                    <dt class="text-sm font-medium text-slate-500">User Role</dt>
-                                    <dd class="text-sm text-slate-900">
+                                    <dt class="text-sm font-medium text-gray-500">User Role</dt>
+                                    <dd class="text-sm text-gray-900">
                                         <span
-                                            class="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">
+                                            class="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-700/20">
                                             {{ userRole }}
                                         </span>
                                     </dd>
                                 </div>
-                                <div class="flex justify-between items-center pt-2 border-t border-slate-100">
-                                    <dt class="text-sm font-medium text-slate-500">Account Created</dt>
-                                    <dd class="text-sm text-slate-900">{{ formatDate(userInfo.created_at) }}</dd>
+                                <div class="flex justify-between items-center pt-2 border-t border-amber-100">
+                                    <dt class="text-sm font-medium text-gray-500">Account Created</dt>
+                                    <dd class="text-sm text-gray-900 font-medium">{{ formatDate(userInfo.created_at) }}</dd>
                                 </div>
-                                <div class="flex justify-between items-center pt-2 border-t border-slate-100">
-                                    <dt class="text-sm font-medium text-slate-500">Last Login</dt>
-                                    <dd class="text-sm text-slate-900">{{ userInfo.last_login ?
+                                <div class="flex justify-between items-center pt-2 border-t border-amber-100">
+                                    <dt class="text-sm font-medium text-gray-500">Last Login</dt>
+                                    <dd class="text-sm text-gray-900 font-medium">{{ userInfo.last_login ?
                                         formatDate(userInfo.last_login) : 'N/A' }}</dd>
                                 </div>
-                                <div class="flex justify-between items-center pt-2 border-t border-slate-100">
-                                    <dt class="text-sm font-medium text-slate-500">Status</dt>
-                                    <dd class="text-sm text-slate-900">
+                                <div class="flex justify-between items-center pt-2 border-t border-amber-100">
+                                    <dt class="text-sm font-medium text-gray-500">Status</dt>
+                                    <dd class="text-sm text-gray-900">
                                         <span
-                                            class="inline-flex items-center rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
-                                            <span class="mr-1 h-1.5 w-1.5 rounded-full bg-green-600"></span>
+                                            class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                                            <span class="mr-1 h-1.5 w-1.5 rounded-full bg-emerald-600"></span>
                                             Active
                                         </span>
                                     </dd>
@@ -409,13 +409,23 @@
 
 .card-hover:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 15px 30px rgba(245, 158, 11, 0.1);
 }
 
 /* Input focus styles */
 input:focus,
 select:focus {
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+/* Enhanced button hover effects */
+button:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+/* Password strength indicator */
+.password-strength {
+    transition: all 0.3s ease;
 }
 </style>
 
@@ -481,6 +491,22 @@ const canSubmitPassword = computed(() => {
         passwordForm.value.new_password === passwordForm.value.confirm_password &&
         passwordForm.value.new_password.length >= 8
     );
+});
+
+const passwordStrength = computed(() => {
+    const password = passwordForm.value.new_password;
+    let strength = 0;
+    
+    if (password.length >= 8) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    
+    return strength;
+});
+
+const lastUpdated = computed(() => {
+    return formatDate(userInfo.value.updated_at) || 'Never';
 });
 
 // Format date helper

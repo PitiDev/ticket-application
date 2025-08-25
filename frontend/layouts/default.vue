@@ -24,27 +24,27 @@
             <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
               <!-- Menus for all users -->
               <NuxtLink to="/"
-                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                :class="route.path === '/' ? 'border-amber-500 text-amber-600' : ''">
+                class="border-transparent text-gray-500 hover:border-amber-300 hover:text-amber-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200"
+                :class="isActiveRoute('/') ? 'border-amber-500 text-amber-600 font-semibold' : ''">
                 Dashboard
               </NuxtLink>
               <NuxtLink to="/tickets"
-                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                :class="route.path === '/tickets' ? 'border-amber-500 text-amber-600' : ''">
+                class="border-transparent text-gray-500 hover:border-amber-300 hover:text-amber-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200"
+                :class="isActiveRoute('/tickets') ? 'border-amber-500 text-amber-600 font-semibold' : ''">
                 Tickets
               </NuxtLink>
 
               <NuxtLink to="/tickets/assigned"
-                class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                :class="route.path.includes('/tickets/assigned') ? 'border-amber-500 text-amber-600' : ''">
+                class="border-transparent text-gray-500 hover:border-amber-300 hover:text-amber-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200"
+                :class="isActiveRoute('/tickets/assigned') ? 'border-amber-500 text-amber-600 font-semibold' : ''">
                 Assigned
               </NuxtLink>
 
               <!-- Admin area menu - only visible to admins -->
               <template v-if="isAdmin || isSuperAdmin">
                 <NuxtLink to="/admin"
-                  class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                  :class="route.path.includes('/admin') ? 'border-amber-500 text-amber-600' : ''">
+                  class="border-transparent text-gray-500 hover:border-amber-300 hover:text-amber-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200"
+                  :class="isActiveRoute('/admin') ? 'border-amber-500 text-amber-600 font-semibold' : ''">
                   Admin area
                 </NuxtLink>
               </template>
@@ -124,20 +124,23 @@
     <!-- Mobile menu for small screens -->
     <div class="sm:hidden bg-white shadow-sm border-b border-gray-200 pb-2">
       <div class="px-2 pt-2 pb-3 space-y-1">
-        <NuxtLink to="/tickets" class="block px-3 py-2 rounded-md text-base font-medium"
-          :class="route.path === '/tickets' ? 'bg-amber-50 text-amber-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'">
+        <NuxtLink to="/tickets" 
+          class="block px-3 py-2 rounded-md text-base font-medium transition-all duration-200"
+          :class="isActiveRoute('/tickets') ? 'bg-amber-100 text-amber-700 shadow-sm' : 'text-gray-500 hover:bg-amber-50 hover:text-amber-600'">
           Tickets
         </NuxtLink>
 
-        <NuxtLink to="/tickets/assigned" class="block px-3 py-2 rounded-md text-base font-medium"
-          :class="route.path.includes('/tickets/assigned') ? 'bg-amber-50 text-amber-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'">
+        <NuxtLink to="/tickets/assigned" 
+          class="block px-3 py-2 rounded-md text-base font-medium transition-all duration-200"
+          :class="isActiveRoute('/tickets/assigned') ? 'bg-amber-100 text-amber-700 shadow-sm' : 'text-gray-500 hover:bg-amber-50 hover:text-amber-600'">
           Assigned
         </NuxtLink>
 
         <!-- Admin area menu - only visible to admins -->
         <template v-if="isAdmin || isSuperAdmin">
-          <NuxtLink to="/admin" class="block px-3 py-2 rounded-md text-base font-medium"
-            :class="route.path.includes('/admin') ? 'bg-amber-50 text-amber-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'">
+          <NuxtLink to="/admin" 
+            class="block px-3 py-2 rounded-md text-base font-medium transition-all duration-200"
+            :class="isActiveRoute('/admin') ? 'bg-amber-100 text-amber-700 shadow-sm' : 'text-gray-500 hover:bg-amber-50 hover:text-amber-600'">
             Admin area
           </NuxtLink>
         </template>
@@ -174,6 +177,14 @@ const appName = ref('Ticket Support System') // ค่าเริ่มต้�
 const logoUrl = ref(null) // URL ของโลโก้
 const notificationCount = ref(0) // จำนวนการแจ้งเตือนที่ยังไม่ได้อ่าน
 const apiBaseUrl = 'http://localhost:9000/api' // Base URL ของ API
+
+// Function to check if a route is active (exact or starts with)
+const isActiveRoute = (path) => {
+  if (path === '/') {
+    return route.path === '/'
+  }
+  return route.path === path || route.path.startsWith(`${path}/`)
+}
 
 // ดึงการตั้งค่าระบบจาก API
 const fetchSystemSettings = async () => {
@@ -227,7 +238,7 @@ onMounted(async () => {
       user.value = JSON.parse(userData)
     } else {
       // ถ้าไม่มีข้อมูลผู้ใช้ ให้ redirect ไปยังหน้า login
-     // router.push('/login')
+      // router.push('/login')
     }
 
     // ดึงการตั้งค่าระบบจาก API
@@ -265,5 +276,20 @@ const logout = () => {
   100% {
     background-position: 200% center;
   }
+}
+
+/* Improved menu transitions */
+.router-link-active {
+  @apply border-amber-500 text-amber-600 font-semibold;
+}
+
+/* Menu item hover effects */
+a.border-b-2:hover {
+  transform: translateY(-1px);
+}
+
+/* Mobile menu active item effect */
+.sm\:hidden a.router-link-active {
+  @apply bg-amber-100 text-amber-700 shadow-sm;
 }
 </style>

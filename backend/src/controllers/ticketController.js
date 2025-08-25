@@ -16,46 +16,46 @@ exports.getTickets = async (req, res) => {
         const search = req.query.search || null;
         const assignedTo = req.query.assignedTo || null;
         const createdBy = req.query.createdBy || null;
-        
+
         // สร้าง conditions สำหรับการกรอง
         let conditions = [];
         let parameters = [];
-        
+
         if (status) {
             conditions.push('s.name = ?');
             parameters.push(status);
         }
-        
+
         if (priority) {
             conditions.push('p.name = ?');
             parameters.push(priority);
         }
-        
+
         if (department) {
             conditions.push('d.name = ?');
             parameters.push(department);
         }
-        
+
         if (search) {
             conditions.push('(t.title LIKE ? OR t.description LIKE ? OR t.ticket_number LIKE ?)');
             parameters.push(`%${search}%`, `%${search}%`, `%${search}%`);
         }
-        
+
         if (assignedTo) {
             conditions.push('t.assigned_to = ?');
             parameters.push(assignedTo);
         }
-        
+
         if (createdBy) {
             conditions.push('t.created_by = ?');
             parameters.push(createdBy);
         }
-        
+
         // สร้าง WHERE clause ถ้ามีเงื่อนไขการกรอง
-        const whereClause = conditions.length > 0 
-            ? `WHERE ${conditions.join(' AND ')}` 
+        const whereClause = conditions.length > 0
+            ? `WHERE ${conditions.join(' AND ')}`
             : '';
-        
+
         // คำสั่ง SQL สำหรับนับจำนวนรายการทั้งหมด
         const countQuery = `
             SELECT COUNT(*) as total
@@ -65,7 +65,7 @@ exports.getTickets = async (req, res) => {
             LEFT JOIN departments d ON t.department_id = d.id
             ${whereClause}
         `;
-        
+
         // คำสั่ง SQL สำหรับดึงข้อมูลพร้อม pagination
         const dataQuery = `
             SELECT t.*, 
@@ -87,16 +87,16 @@ exports.getTickets = async (req, res) => {
             ORDER BY t.created_at DESC
             LIMIT ?, ?
         `;
-        
+
         // ดึงข้อมูลจำนวนรายการทั้งหมด
         const [countResult] = await db.execute(countQuery, parameters);
         const totalItems = countResult[0].total;
         const totalPages = Math.ceil(totalItems / limit);
-        
+
         // ดึงข้อมูล tickets ตาม pagination
         const paginationParams = [...parameters, offset, limit];
         const [tickets] = await db.execute(dataQuery, paginationParams);
-        
+
         // ส่งข้อมูลที่ได้พร้อมกับข้อมูล pagination
         res.json({
             data: tickets,
@@ -510,16 +510,41 @@ exports.deleteTicket = async (req, res) => {
         await conn.beginTransaction();
 
         const { id } = req.params;
-        const user_id = req.user.id;
 
-        // Check if ticket exists
-        const [ticket] = await conn.execute(
-            'SELECT id FROM tickets WHERE id = ?',
+        // Debug log to check the req.user object
+        console.log('Delete ticket - req.user:', req.user);
+
+        // Check if user is authenticated
+        // if (!req.user || !req.user.id) {
+        //     console.error('Delete ticket - Missing user or user ID');
+        //     return res.status(401).json({
+        //         message: 'Unauthorized - Authentication required or user ID missing'
+        //     });
+        // }
+
+        const user_id = req.user.id;
+        console.log('User ID for deletion:', user_id);
+
+        // Check if ticket exists and get ticket details to verify ownership
+        const [ticketRows] = await conn.execute(
+            'SELECT id, created_by FROM tickets WHERE id = ?',
             [id]
         );
 
-        if (!ticket.length) {
+        if (ticketRows.length === 0) {
             return res.status(404).json({ message: 'Ticket not found' });
+        }
+
+        const ticket = ticketRows[0];
+        console.log('Ticket found:', ticket);
+
+        // Check if the user is the creator of the ticket
+        if (ticket.created_by !== user_id) {
+            return res.status(403).json({
+                message: 'Forbidden - Only the ticket creator can delete this ticket',
+                ticketCreator: ticket.created_by,
+                currentUser: user_id
+            });
         }
 
         // Create history entry before deletion
@@ -529,11 +554,21 @@ exports.deleteTicket = async (req, res) => {
             [id, user_id]
         );
 
-        // Delete ticket
+        // Delete related records first (to avoid foreign key constraints)
+        // Delete comments
+        await conn.execute('DELETE FROM comments WHERE ticket_id = ?', [id]);
+
+        // Delete history (except the one we just created)
+        await conn.execute('DELETE FROM ticket_history WHERE ticket_id = ? AND action != "deleted"', [id]);
+
+        // Delete attachments (you might need to handle file storage separately)
+        await conn.execute('DELETE FROM attachments WHERE ticket_id = ?', [id]);
+
+        // Finally delete the ticket
         await conn.execute('DELETE FROM tickets WHERE id = ?', [id]);
 
         await conn.commit();
-        res.status(204).send();
+        res.status(200).json({ message: 'Ticket deleted successfully' });
     } catch (error) {
         await conn.rollback();
         console.error('Error deleting ticket:', error);
