@@ -440,7 +440,7 @@ import {
 const config = useRuntimeConfig();
 const router = useRouter();
 const toast = useToast();
-const apiBaseUrl = 'http://localhost:9000/api';
+const apiBaseUrl = 'http://172.16.4.62:9000/api';
 
 // States
 const loading = ref(true);

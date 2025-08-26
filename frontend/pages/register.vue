@@ -13,7 +13,7 @@ const formData = ref({
 // สำหรับเก็บข้อมูลจาก API Settings
 const appName = ref('Ticket Support System') // ค่าเริ่มต้น
 const logoUrl = ref(null) // URL ของโลโก้
-const apiBaseUrl = 'http://localhost:9000/api' // Base URL ของ API
+const apiBaseUrl = 'http://172.16.4.62:9000/api' // Base URL ของ API
 const allowRegistration = ref(true) // ค่าเริ่มต้น - อนุญาตให้ลงทะเบียน
 
 const error = ref('')

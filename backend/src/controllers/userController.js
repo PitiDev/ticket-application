@@ -1,6 +1,8 @@
 // src/controllers/userController.js
 const db = require('../config/database');
-const bcrypt = require('bcrypt');
+// const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
+
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer'); // ต้องติดตั้ง nodemailer ก่อนใช้งาน: npm install nodemailer
 

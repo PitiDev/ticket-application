@@ -1,6 +1,8 @@
 // backend/src/controllers/adminController.js
 const db = require('../config/database');
-const bcrypt = require('bcrypt');
+// const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
+
 
 // ดึงข้อมูลผู้ใช้ทั้งหมด
 exports.getUsers = async (req, res) => {

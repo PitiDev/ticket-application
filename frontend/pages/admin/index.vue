@@ -192,7 +192,7 @@ const handleAddUser = async (): Promise<void> => {
     // ตรวจสอบข้อมูลที่ส่งไป
     console.log('Sending user data:', userForm.value);
 
-    const response = await fetch(`http://localhost:9000/api/admin/users`, {
+    const response = await fetch(`http://172.16.4.62:9000/api/admin/users`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${auth.getToken()}`,
@@ -236,7 +236,7 @@ const handleEditUser = async (): Promise<void> => {
     // ตรวจสอบข้อมูลที่ส่งไป
     console.log('Sending updated user data:', userForm.value);
 
-    const response = await fetch(`http://localhost:9000/api/admin/users/${selectedUser.value.id}`, {
+    const response = await fetch(`http://172.16.4.62:9000/api/admin/users/${selectedUser.value.id}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${auth.getToken()}`,

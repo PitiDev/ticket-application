@@ -17,7 +17,7 @@
               <!-- เปลี่ยนสีเป็นทองคำ (Golden) -->
               <span
                 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-yellow-400 gold-shimmer">{{
-                appName }}</span>
+                  appName }}</span>
             </NuxtLink>
 
             <!-- Main Navigation Menu -->
@@ -48,6 +48,15 @@
                   Admin area
                 </NuxtLink>
               </template>
+
+              <template v-if="isAdmin || isSuperAdmin">
+                <NuxtLink to="/admin/mobile-report"
+                  class="border-transparent text-gray-500 hover:border-amber-300 hover:text-amber-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200"
+                  :class="isActiveRoute('/admin/mobile-report') ? 'border-amber-500 text-amber-600 font-semibold' : ''">
+                  LBB Plus Report
+                </NuxtLink>
+              </template>
+
             </div>
           </div>
 
@@ -96,10 +105,10 @@
                   </div>
                   </MenuItem>
                   <MenuItem v-slot="{ active }">
-                     <NuxtLink to="/profile">
-                  <a href="#" :class="[active ? 'bg-gray-100' : '', 'block px-4 py-2 text-sm text-gray-700']">
-                    Your Profile
-                  </a>
+                  <NuxtLink to="/profile">
+                    <a href="#" :class="[active ? 'bg-gray-100' : '', 'block px-4 py-2 text-sm text-gray-700']">
+                      Your Profile
+                    </a>
                   </NuxtLink>
                   </MenuItem>
                   <MenuItem v-slot="{ active }">
@@ -124,13 +133,12 @@
     <!-- Mobile menu for small screens -->
     <div class="sm:hidden bg-white shadow-sm border-b border-gray-200 pb-2">
       <div class="px-2 pt-2 pb-3 space-y-1">
-        <NuxtLink to="/tickets" 
-          class="block px-3 py-2 rounded-md text-base font-medium transition-all duration-200"
+        <NuxtLink to="/tickets" class="block px-3 py-2 rounded-md text-base font-medium transition-all duration-200"
           :class="isActiveRoute('/tickets') ? 'bg-amber-100 text-amber-700 shadow-sm' : 'text-gray-500 hover:bg-amber-50 hover:text-amber-600'">
           Tickets
         </NuxtLink>
 
-        <NuxtLink to="/tickets/assigned" 
+        <NuxtLink to="/tickets/assigned"
           class="block px-3 py-2 rounded-md text-base font-medium transition-all duration-200"
           :class="isActiveRoute('/tickets/assigned') ? 'bg-amber-100 text-amber-700 shadow-sm' : 'text-gray-500 hover:bg-amber-50 hover:text-amber-600'">
           Assigned
@@ -138,8 +146,7 @@
 
         <!-- Admin area menu - only visible to admins -->
         <template v-if="isAdmin || isSuperAdmin">
-          <NuxtLink to="/admin" 
-            class="block px-3 py-2 rounded-md text-base font-medium transition-all duration-200"
+          <NuxtLink to="/admin" class="block px-3 py-2 rounded-md text-base font-medium transition-all duration-200"
             :class="isActiveRoute('/admin') ? 'bg-amber-100 text-amber-700 shadow-sm' : 'text-gray-500 hover:bg-amber-50 hover:text-amber-600'">
             Admin area
           </NuxtLink>
@@ -176,7 +183,7 @@ const config = useRuntimeConfig()
 const appName = ref('Ticket Support System') // ค่าเริ่มต้น
 const logoUrl = ref(null) // URL ของโลโก้
 const notificationCount = ref(0) // จำนวนการแจ้งเตือนที่ยังไม่ได้อ่าน
-const apiBaseUrl = 'http://localhost:9000/api' // Base URL ของ API
+const apiBaseUrl = 'http://172.16.4.62:9000/api' // Base URL ของ API
 
 // Function to check if a route is active (exact or starts with)
 const isActiveRoute = (path) => {
@@ -273,6 +280,7 @@ const logout = () => {
   0% {
     background-position: 0% center;
   }
+
   100% {
     background-position: 200% center;
   }

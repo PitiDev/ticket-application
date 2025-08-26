@@ -53,7 +53,7 @@ export const useAuth = defineStore('auth', {
       this.error = null;
       try {
         // ใช้ URL ตามที่ผู้ใช้กำหนด
-        const response = await fetch('http://localhost:9000/api/users/login', {
+        const response = await fetch('http://172.16.4.62:9000/api/users/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -90,7 +90,7 @@ export const useAuth = defineStore('auth', {
           throw new Error('No token found');
         }
         
-        const response = await fetch('http://localhost:9000/api/users/profile', {
+        const response = await fetch('http://172.16.4.62:9000/api/users/profile', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
