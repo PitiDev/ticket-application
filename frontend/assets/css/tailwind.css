@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Lao&family=Noto+Sans+JP&family=Noto+Sans+Thai&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Rest of your global styles */
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+  --font-lao: 'Noto Sans Lao', sans-serif;
+  --font-en: 'Arial', sans-serif;
+  --font-th: 'Sarabun', sans-serif;
+  --font-jp: 'Noto Sans JP', sans-serif;
+}
+
+html,
+body {
+  font-family: 'Noto Sans Lao', 'Noto Sans JP', 'Noto Sans Thai', sans-serif;
+}
+
+.bg-gray {
+    background-color: #fcfcfc;
+}
+
+.font12 {
+    font-size: 12pt;
+}
+
+.font14 {
+    font-size: 14pt;
+}
+
+.font16 {
+    font-size: 16pt;
+}
+
+.font18 {
+    font-size: 18pt;
+}

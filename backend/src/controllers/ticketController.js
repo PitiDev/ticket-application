@@ -1,6 +1,22 @@
 // src/controllers/ticketController.js
 const db = require('../config/database');
 
+
+function formatDateForMySQL(isoString) {
+    if (!isoString) return null;
+
+    // Convert ISO string to MySQL datetime format
+    const date = new Date(isoString);
+
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+        return null;
+    }
+
+    // Format as YYYY-MM-DD HH:MM:SS
+    return date.toISOString().slice(0, 19).replace('T', ' ');
+}
+
 // Get all tickets
 exports.getTickets = async (req, res) => {
     try {
@@ -67,6 +83,7 @@ exports.getTickets = async (req, res) => {
         `;
 
         // คำสั่ง SQL สำหรับดึงข้อมูลพร้อม pagination
+        // Fixed: Use string interpolation for LIMIT to avoid MariaDB prepared statement issues
         const dataQuery = `
             SELECT t.*, 
                    u.username as created_by_name,
@@ -85,8 +102,14 @@ exports.getTickets = async (req, res) => {
             LEFT JOIN users assigned ON t.assigned_to = assigned.id
             ${whereClause}
             ORDER BY t.created_at DESC
-            LIMIT ?, ?
+            LIMIT ${offset}, ${limit}
         `;
+
+        // Debug logging
+        console.log('Count Query:', countQuery);
+        console.log('Count Parameters:', parameters);
+        console.log('Data Query:', dataQuery);
+        console.log('Using offset:', offset, 'limit:', limit);
 
         // ดึงข้อมูลจำนวนรายการทั้งหมด
         const [countResult] = await db.execute(countQuery, parameters);
@@ -94,8 +117,8 @@ exports.getTickets = async (req, res) => {
         const totalPages = Math.ceil(totalItems / limit);
 
         // ดึงข้อมูล tickets ตาม pagination
-        const paginationParams = [...parameters, offset, limit];
-        const [tickets] = await db.execute(dataQuery, paginationParams);
+        // Fixed: Use only the filter parameters, no LIMIT parameters needed
+        const [tickets] = await db.execute(dataQuery, parameters);
 
         // ส่งข้อมูลที่ได้พร้อมกับข้อมูล pagination
         res.json({
@@ -111,6 +134,7 @@ exports.getTickets = async (req, res) => {
         });
     } catch (error) {
         console.error('Error getting tickets:', error);
+        console.error('Error stack:', error.stack);
         res.status(500).json({ message: 'Error retrieving tickets', error: error.message });
     }
 };
@@ -203,6 +227,9 @@ exports.createTicket = async (req, res) => {
             }
         }
 
+        // Format due_date for MySQL
+        const formattedDueDate = formatDateForMySQL(due_date);
+
         // Insert new ticket with ticket_number
         const [result] = await conn.execute(
             `INSERT INTO tickets (
@@ -222,7 +249,7 @@ exports.createTicket = async (req, res) => {
                 priority_id,
                 department_id,
                 created_by,
-                due_date || null,
+                formattedDueDate, // Changed from: due_date || null
                 is_private || 0,
                 parent_ticket_id || null,
                 assigned_to || null
@@ -277,8 +304,6 @@ exports.createTicket = async (req, res) => {
             // Import email service
             const emailService = require('../services/emailService');
 
-
-
             // Notify the assignee if the ticket is assigned during creation
             if (assigneeDetails && assigneeDetails.email) {
                 await emailService.sendTicketAssignmentEmail({
@@ -286,7 +311,7 @@ exports.createTicket = async (req, res) => {
                     userName: assigneeDetails.full_name || assigneeDetails.username,
                     ticketNumber: ticketNumber,
                     ticketTitle: title,
-                    ticketUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/tickets/${result.insertId}`,
+                    ticketUrl: `${process.env.FRONTEND_URL || 'http://172.16.4.62:7000/'}/tickets/${result.insertId}`,
                     assignedBy: creatorName
                 });
             }
@@ -511,23 +536,38 @@ exports.deleteTicket = async (req, res) => {
 
         const { id } = req.params;
 
-        // Debug log to check the req.user object
-        console.log('Delete ticket - req.user:', req.user);
+        // Get user_id from request body - ensure it's not undefined
+        let user_id = req.body?.user_id || req.user?.id || null;
 
-        // Check if user is authenticated
-        // if (!req.user || !req.user.id) {
-        //     console.error('Delete ticket - Missing user or user ID');
-        //     return res.status(401).json({
-        //         message: 'Unauthorized - Authentication required or user ID missing'
-        //     });
-        // }
+        // Convert undefined to null for SQL compatibility
+        if (user_id === undefined) {
+            user_id = null;
+        }
 
-        const user_id = req.user.id;
-        console.log('User ID for deletion:', user_id);
+        // Debug logging
+        console.log('Delete ticket request:');
+        console.log('- Ticket ID:', id);
+        console.log('- User ID from body:', req.body?.user_id);
+        console.log('- User ID from auth:', req.user?.id);
+        console.log('- Final user_id:', user_id);
+        console.log('- Request body:', req.body);
 
-        // Check if ticket exists and get ticket details to verify ownership
+        // Validate required parameters
+        if (!id) {
+            return res.status(400).json({
+                message: 'Ticket ID is required'
+            });
+        }
+
+        // For now, allow deletion without user_id (you can change this later)
+        if (!user_id) {
+            console.log('Warning: Deleting ticket without user_id');
+            user_id = null; // Use null instead of undefined
+        }
+
+        // Check if ticket exists
         const [ticketRows] = await conn.execute(
-            'SELECT id, created_by FROM tickets WHERE id = ?',
+            'SELECT id, created_by, title FROM tickets WHERE id = ?',
             [id]
         );
 
@@ -538,41 +578,57 @@ exports.deleteTicket = async (req, res) => {
         const ticket = ticketRows[0];
         console.log('Ticket found:', ticket);
 
-        // Check if the user is the creator of the ticket
-        if (ticket.created_by !== user_id) {
-            return res.status(403).json({
-                message: 'Forbidden - Only the ticket creator can delete this ticket',
-                ticketCreator: ticket.created_by,
-                currentUser: user_id
-            });
+        // Create history entry before deletion (only if user_id is available)
+        if (user_id !== null) {
+            await conn.execute(
+                `INSERT INTO ticket_history (ticket_id, user_id, action)
+                 VALUES (?, ?, 'deleted')`,
+                [id, user_id, 'deleted']
+            );
         }
-
-        // Create history entry before deletion
-        await conn.execute(
-            `INSERT INTO ticket_history (ticket_id, user_id, action)
-             VALUES (?, ?, 'deleted')`,
-            [id, user_id]
-        );
 
         // Delete related records first (to avoid foreign key constraints)
         // Delete comments
         await conn.execute('DELETE FROM comments WHERE ticket_id = ?', [id]);
 
-        // Delete history (except the one we just created)
-        await conn.execute('DELETE FROM ticket_history WHERE ticket_id = ? AND action != "deleted"', [id]);
+        // Delete history (except the deletion entry we just created)
+        await conn.execute(
+            'DELETE FROM ticket_history WHERE ticket_id = ? AND action != ?',
+            [id, 'deleted']
+        );
 
-        // Delete attachments (you might need to handle file storage separately)
+        // Delete attachments
         await conn.execute('DELETE FROM attachments WHERE ticket_id = ?', [id]);
 
         // Finally delete the ticket
-        await conn.execute('DELETE FROM tickets WHERE id = ?', [id]);
+        const [deleteResult] = await conn.execute('DELETE FROM tickets WHERE id = ?', [id]);
 
         await conn.commit();
-        res.status(200).json({ message: 'Ticket deleted successfully' });
+
+        // Check if ticket was actually deleted
+        if (deleteResult.affectedRows === 0) {
+            return res.status(404).json({ message: 'Ticket not found or already deleted' });
+        }
+
+        res.status(200).json({
+            message: 'Ticket deleted successfully',
+            deletedTicketId: id,
+            deletedBy: user_id,
+            affectedRows: deleteResult.affectedRows
+        });
+
     } catch (error) {
         await conn.rollback();
         console.error('Error deleting ticket:', error);
-        res.status(500).json({ message: 'Error deleting ticket', error: error.message });
+        console.error('Error details:', {
+            message: error.message,
+            code: error.code,
+            errno: error.errno
+        });
+        res.status(500).json({
+            message: 'Error deleting ticket',
+            error: error.message
+        });
     } finally {
         conn.release();
     }

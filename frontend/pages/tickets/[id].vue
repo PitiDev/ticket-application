@@ -698,7 +698,7 @@ onMounted(() => {
                           class="h-10 w-10 rounded-full bg-gradient-to-r from-amber-200 to-red-200 flex items-center justify-center shadow-sm">
                           <span class="text-amber-800 font-medium">{{ comment.user_name ?
                             comment.user_name.charAt(0).toUpperCase() : '?'
-                            }}</span>
+                          }}</span>
                         </div>
                       </div>
 

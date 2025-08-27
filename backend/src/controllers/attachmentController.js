@@ -7,7 +7,7 @@ const { v4: uuidv4 } = require('uuid');
 
 // Configuration
 const config = {
-    baseUrl: process.env.BASE_URL || 'http://localhost:9000',
+    baseUrl: process.env.BASE_URL || 'http://172.16.4.62:9000',
     uploadDir: 'uploads'
 };
 

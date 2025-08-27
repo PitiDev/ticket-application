@@ -16,10 +16,14 @@
     "@pinia/nuxt": "^0.10.1",
     "@vueuse/core": "^12.7.0",
     "chart.js": "^4.5.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.2",
     "nuxt": "^3.15.4",
     "vue": "latest",
     "vue-chartjs": "^5.3.2",
     "vue-router": "latest",
-    "vue-toastification": "^2.0.0-rc.5"
+    "vue-toastification": "^2.0.0-rc.5",
+    "xlsx": "^0.18.5",
+    "xlsx-style": "^0.8.13"
   }
 }
