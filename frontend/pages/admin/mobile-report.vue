@@ -88,11 +88,14 @@
       <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
           <div class="space-y-2">
-            <div class="text-2xl font-bold text-green-800">{{ countCompleted(buyTransactions) + sellTransactions.length
-            }}</div>
+            <div class="text-2xl font-bold text-green-800">
+              {{ (transactionStatusSummary?.buyCompleted || 0) + (transactionStatusSummary?.sellCompleted || 0) }}
+            </div>
             <div class="text-sm text-green-600 font-medium">COMPLETED Transactions</div>
-            <div class="text-xs text-gray-500">Buy: {{ countCompleted(buyTransactions) }} | Sell: {{
-              sellTransactions.length }}</div>
+            <div class="text-xs text-gray-500">
+              Buy: {{ transactionStatusSummary?.buyCompleted || 0 }} |
+              Sell: {{ transactionStatusSummary?.sellCompleted || 0 }}
+            </div>
           </div>
           <div class="space-y-2">
             <div class="text-2xl font-bold text-blue-800">{{ formatCurrency(calculateCompletedAmount(buyTransactions) +
@@ -107,9 +110,10 @@
             <div class="text-xs text-gray-500">Total completed gold processed</div>
           </div>
           <div class="space-y-2">
-            <div class="text-2xl font-bold text-amber-800">{{ kycApprovalRate }}%</div>
-            <div class="text-sm text-amber-600 font-medium">KYC Approval Rate</div>
-            <div class="text-xs text-gray-500">{{ kycDateRangeData.APPROVED || 0 }} approved applications</div>
+            <div class="text-2xl font-bold text-amber-800">{{ transactionStatusSummary?.buySuccessRate || 0 }}%</div>
+            <div class="text-sm text-amber-600 font-medium">Buy Success Rate</div>
+            <div class="text-xs text-gray-500">{{ transactionStatusSummary?.buyCompleted || 0 }} completed of {{
+              transactionStatusSummary?.buyTotal || 0 }}</div>
           </div>
         </div>
       </div>
@@ -191,15 +195,22 @@
               </div>
               <div class="text-right">
                 <p class="text-sm text-gray-500 font-medium">KYC Applications</p>
-                <p class="text-2xl font-bold text-gray-800">{{ kycDateRangeData.TOTAL || 0 }}</p>
+                <p class="text-2xl font-bold text-gray-800">{{ kycDateRangeData.TOTAL_KYC_COUNT || 0 }}</p>
               </div>
             </div>
             <div class="space-y-1">
-              <p class="text-sm text-gray-600">{{ kycDateRangeData.APPROVED || 0 }} approved</p>
+              <p class="text-sm text-green-600">{{ kycDateRangeData.APPROVED || 0 }} approved</p>
+              <p class="text-sm text-green-300">{{ kycDateRangeData.PRE_APPROVED || 0 }} pre_approved</p>
+
               <p class="text-sm font-semibold text-blue-600">{{ kycDateRangeData.PROCESSING || 0 }} processing</p>
+              <p class="text-sm font-semibold text-yellow-600">{{ kycDateRangeData.PENDING || 0 }} pending</p>
+              <p class="text-sm font-semibold text-yellow-400">{{ kycDateRangeData.VERIFY || 0 }} verify</p>
+              <p class="text-sm font-semibold text-blue-400">{{ kycDateRangeData.ADJUST || 0 }} adjust</p>
+              <p class="text-sm font-semibold text-gray-400">{{ kycDateRangeData.NONE || 0 }} none</p>
+
             </div>
-            <div class="mt-4 bg-blue-50 rounded-lg p-3">
-              <p class="text-xs text-blue-700">{{ kycDateRangeData.REJECTED || 0 }} rejected</p>
+            <div class="mt-4 bg-red-50 rounded-lg p-3">
+              <p class="text-xs text-red-700 text-bold">{{ kycDateRangeData.REJECTED || 0 }} rejected</p>
             </div>
           </div>
 
@@ -248,6 +259,27 @@
           <div class="h-64">
             <canvas ref="transactionStatusChart"></canvas>
           </div>
+
+          <!-- Add summary stats below the chart -->
+          <div v-if="transactionStatusSummary" class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div class="bg-green-50 rounded-lg p-3">
+              <div class="text-lg font-bold text-green-800">{{ transactionStatusSummary.buyCompleted }}</div>
+              <div class="text-xs text-green-600">Buy Completed</div>
+            </div>
+            <div class="bg-yellow-50 rounded-lg p-3">
+              <div class="text-lg font-bold text-yellow-800">{{ transactionStatusSummary.buyPending }}</div>
+              <div class="text-xs text-yellow-600">Buy Pending</div>
+            </div>
+            <div class="bg-red-50 rounded-lg p-3">
+              <div class="text-lg font-bold text-red-800">{{ transactionStatusSummary.buyFailed }}</div>
+              <div class="text-xs text-red-600">Buy Failed</div>
+            </div>
+            <div class="bg-purple-50 rounded-lg p-3">
+              <div class="text-lg font-bold text-purple-800">{{ transactionStatusSummary.sellCompleted }}</div>
+              <div class="text-xs text-purple-600">Sell Completed</div>
+            </div>
+          </div>
+
         </div>
 
         <!-- Daily Trends Line Chart -->
@@ -667,8 +699,9 @@ export default {
     const sellTransactions = ref([])
     const kycDateRangeData = ref({})
     const topupDateRangeData = ref({})
+    const transactionStatusData = ref({})
 
-    const baseURL = 'http://172.16.4.62:3000/api'
+    const baseURL = 'http://172.16.0.46:3000/api'
 
     // Gemini API Configuration
     const GEMINI_API_KEY = 'AIzaSyAaAY5zRiBbiNFQ3v3ipUyWc5-py96qwjo' // Replace with your actual API key
@@ -750,6 +783,45 @@ export default {
       return Math.round(((kycDateRangeData.value.APPROVED || 0) / total) * 100)
     })
 
+    // Add this method with your other fetch methods
+    const fetchTransactionStatusDistribution = async () => {
+      try {
+        loadingMessage.value = 'Loading transaction status distribution...'
+        const response = await fetch(`${baseURL}/gold/transaction-status-distribution?startDate=${startDate.value}&endDate=${endDate.value}`)
+        const data = await response.json()
+        if (data.success) {
+          transactionStatusData.value = data.data || {}
+          console.log('✅ Transaction status data loaded:', transactionStatusData.value)
+        }
+      } catch (err) {
+        console.error('Error fetching transaction status distribution:', err)
+        transactionStatusData.value = {}
+      }
+    }
+
+    const transactionStatusSummary = computed(() => {
+  if (!transactionStatusData.value || !transactionStatusData.value.totalTransactions) {
+    return {
+      buyCompleted: 0,
+      buyPending: 0,
+      buyFailed: 0,
+      sellCompleted: 0,
+      buyTotal: 0,
+      totalTransactions: 0,
+      buySuccessRate: 0
+    }
+  }
+  
+  return {
+    buyCompleted: transactionStatusData.value.buyCompleted || 0,
+    buyPending: transactionStatusData.value.buyPending || 0,
+    buyFailed: transactionStatusData.value.buyFailed || 0,
+    sellCompleted: transactionStatusData.value.sellCompleted || 0,
+    buyTotal: transactionStatusData.value.buyTotal || 0,
+    totalTransactions: transactionStatusData.value.totalTransactions || 0,
+    buySuccessRate: transactionStatusData.value.buySuccessRate || 0
+  }
+})
 
     const exportToPDF = async () => {
       if (!reportContent.value) return
@@ -795,7 +867,7 @@ export default {
       }
     }
 
-      const exportToExcel = () => {
+    const exportToExcel = () => {
       if (!process.client) return // Ensure client-side only
 
       const wb = XLSX.utils.book_new()
@@ -904,7 +976,7 @@ export default {
       // Download
       XLSX.writeFile(wb, `LBB_Plus_Report_${startDate.value}_to_${endDate.value}.xlsx`)
     }
-    
+
     // AI Analysis Functions
     const generateAIAnalysis = async () => {
       if (!hasData.value) {
@@ -1315,7 +1387,8 @@ export default {
           fetchBuyTransactions(),
           fetchSellTransactions(),
           fetchKYCDateRange(),
-          fetchTopupDateRange()
+          fetchTopupDateRange(),
+          fetchTransactionStatusDistribution() // ADD THIS LINE
         ])
 
         // Initialize charts after data is loaded
@@ -1420,32 +1493,22 @@ export default {
       }
 
       // Transaction Status Chart
-      if (transactionStatusChart.value) {
+      if (transactionStatusChart.value && transactionStatusData.value.pieChartData) {
         const ctx = transactionStatusChart.value.getContext('2d')
         if (transactionStatusChartInstance) {
           transactionStatusChartInstance.destroy()
         }
 
-        const buyCompleted = countCompleted(buyTransactions.value)
-        const buyPending = countPending(buyTransactions.value)
-        const sellTotal = sellTransactions.value.length
+        const chartData = transactionStatusData.value.pieChartData
 
         transactionStatusChartInstance = new window.Chart(ctx, {
           type: 'doughnut',
           data: {
-            labels: ['Buy Completed', 'Buy Pending', 'Sell Completed'],
+            labels: chartData.labels,
             datasets: [{
-              data: [buyCompleted, buyPending, sellTotal],
-              backgroundColor: [
-                'rgba(34, 197, 94, 0.8)',
-                'rgba(251, 191, 36, 0.8)',
-                'rgba(239, 68, 68, 0.8)'
-              ],
-              borderColor: [
-                'rgb(34, 197, 94)',
-                'rgb(251, 191, 36)',
-                'rgb(239, 68, 68)'
-              ],
+              data: chartData.values,
+              backgroundColor: chartData.colors,
+              borderColor: chartData.colors.map(color => color.replace('0.8', '1')),
               borderWidth: 2
             }]
           },
@@ -1455,6 +1518,17 @@ export default {
             plugins: {
               legend: {
                 position: 'bottom',
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    const label = context.label || ''
+                    const value = context.parsed
+                    const total = transactionStatusData.value.totalTransactions || 0
+                    const percentage = total > 0 ? Math.round((value / total) * 100) : 0
+                    return `${label}: ${value} (${percentage}%)`
+                  }
+                }
               }
             }
           }
@@ -1503,8 +1577,8 @@ export default {
               {
                 label: 'Buy COMPLETED Transactions',
                 data: uniqueDates.map(date => dateGroups[date]?.buyCount || 0),
-                borderColor: 'rgb(251, 191, 36)',
-                backgroundColor: 'rgba(251, 191, 36, 0.1)',
+                borderColor: 'rgb(35 162 91)',
+                backgroundColor: 'rgba(35, 162, 91, 0.1)',
                 tension: 0.4,
                 fill: true
               },
@@ -1545,24 +1619,36 @@ export default {
         kycStatusChartInstance = new window.Chart(ctx, {
           type: 'doughnut',
           data: {
-            labels: ['Approved', 'Processing', 'Pre-approved', 'Rejected'],
+            labels: ['Approved', 'Processing', 'Pending', 'Pre-approved', 'Rejected', 'Verify', 'Adjust', 'None'],
             datasets: [{
               data: [
                 kycDateRangeData.value.APPROVED || 0,
                 kycDateRangeData.value.PROCESSING || 0,
+                kycDateRangeData.value.PENDING || 0,
                 kycDateRangeData.value.PRE_APPROVED || 0,
-                kycDateRangeData.value.REJECTED || 0
+                kycDateRangeData.value.REJECTED || 0,
+                kycDateRangeData.value.VERIFY || 0,
+                kycDateRangeData.value.ADJUST || 0,
+                kycDateRangeData.value.NONE || 0
               ],
               backgroundColor: [
                 'rgba(34, 197, 94, 0.8)',
                 'rgba(251, 191, 36, 0.8)',
+                'rgba(251, 191, 36, 0.2)',
                 'rgba(59, 130, 246, 0.8)',
-                'rgba(239, 68, 68, 0.8)'
+                'rgba(239, 68, 68, 0.8)',
+                'rgba(239, 68, 68, 0.2)',
+                'rgba(239, 68, 68, 0.2)',
+                'rgba(239, 68, 68, 0.2)'
               ],
               borderColor: [
                 'rgb(34, 197, 94)',
                 'rgb(251, 191, 36)',
+                'rgb(251, 191, 36)',
                 'rgb(59, 130, 246)',
+                'rgb(239, 68, 68)',
+                'rgb(239, 68, 68)',
+                'rgb(239, 68, 68)',
                 'rgb(239, 68, 68)'
               ],
               borderWidth: 2
@@ -1598,13 +1684,13 @@ export default {
                 topupDateRangeData.value.overall.otherCount || 0
               ],
               backgroundColor: [
-                'rgba(34, 197, 94, 0.8)',
-                'rgba(168, 85, 247, 0.8)',
+                'rgb(15 128 205)',
+                'rgb(28 195 118)',
                 'rgba(156, 163, 175, 0.8)'
               ],
               borderColor: [
-                'rgb(34, 197, 94)',
-                'rgb(168, 85, 247)',
+                'rgb(5 74 131)',
+                'rgb(25 135 84)',
                 'rgb(156, 163, 175)'
               ],
               borderWidth: 2
@@ -1710,7 +1796,11 @@ export default {
       topupChart,
       reportContent,
       exportToPDF,
-      exportToExcel
+      exportToExcel,
+      transactionStatusData,
+      fetchTransactionStatusDistribution,
+        transactionStatusSummary, // ADD THIS LINE
+
     }
   }
 }
