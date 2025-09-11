@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-gray-50 py-8 px-4">
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-6xl mx-auto">
       <!-- Header -->
       <div class="text-center mb-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-2">LBB Core Banking Check Info Customer</h1>
@@ -10,7 +10,7 @@
       <!-- Search Type Tabs -->
       <div class="bg-white rounded-lg shadow-md mb-6 overflow-hidden">
         <div class="border-b border-gray-200">
-          <nav class="flex space-x-8 px-6" aria-label="Tabs">
+          <nav class="flex space-x-8 px-6 overflow-x-auto" aria-label="Tabs">
             <button
               v-for="tab in searchTabs"
               :key="tab.id"
@@ -115,6 +115,23 @@
             </div>
           </div>
 
+          <!-- Comparison Search -->
+          <div v-if="activeTab === 'comparison'" class="space-y-4">
+            <div>
+              <label for="comparisonPhone" class="block text-sm font-medium text-gray-700 mb-2">
+                Phone Number for Comparison
+              </label>
+              <input
+                id="comparisonPhone"
+                v-model="searchData.comparisonPhone"
+                type="tel"
+                placeholder="Enter phone number (e.g., 2056594991)"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-colors"
+                @keyup.enter="searchClientInfo"
+              />
+            </div>
+          </div>
+
           <!-- Search Button -->
           <div class="flex justify-center mt-6">
             <button
@@ -187,6 +204,7 @@
             </div>
           </div>
         </div>
+        
         <!-- Client Information -->
         <div class="bg-white rounded-lg shadow-md overflow-hidden">
           <div class="bg-gradient-to-r from-amber-500 to-yellow-600 px-6 py-4">
@@ -202,35 +220,54 @@
               <div class="space-y-4">
                 <div>
                   <label class="text-sm font-medium text-gray-500">Client Number (CIF)</label>
-                  <p class="text-lg font-semibold text-gray-900">{{ getClientInfo?.client_no }}</p>
+                  <p class="text-lg font-semibold text-gray-900">{{ getClientInfo?.client_no || (activeTab === 'comparison' ? clientData.customer_info.core_banking.client_no : '') }}</p>
                 </div>
                 <div>
                   <label class="text-sm font-medium text-gray-500">Client Name</label>
-                  <p class="text-lg font-semibold text-gray-900">{{ getClientInfo?.client_name }}</p>
+                  <p class="text-lg font-semibold text-gray-900">{{ getClientInfo?.client_name || (activeTab === 'comparison' ? clientData.customer_info.core_banking.client_name : '') }}</p>
                 </div>
                 <div>
                   <label class="text-sm font-medium text-gray-500">Client ID</label>
-                  <p class="text-lg font-semibold text-gray-900">{{ getClientInfo?.client_id }}</p>
+                  <p class="text-lg font-semibold text-gray-900">{{ getClientInfo?.client_id || (activeTab === 'comparison' ? clientData.customer_info.core_banking.client_id : '') }}</p>
                 </div>
               </div>
               <div class="space-y-4">
                 <div>
                   <label class="text-sm font-medium text-gray-500">Global ID Type</label>
-                  <p class="text-lg font-semibold text-gray-900">{{ getClientInfo?.global_id_type }}</p>
+                  <p class="text-lg font-semibold text-gray-900">{{ getClientInfo?.global_id_type || (activeTab === 'comparison' ? clientData.customer_info.core_banking.global_id_type : '') }}</p>
                 </div>
                 <div>
                   <label class="text-sm font-medium text-gray-500">Global ID</label>
-                  <p class="text-lg font-semibold text-gray-900">{{ getClientInfo?.global_id }}</p>
+                  <p class="text-lg font-semibold text-gray-900">{{ getClientInfo?.global_id || (activeTab === 'comparison' ? clientData.customer_info.core_banking.global_id : '') }}</p>
                 </div>
                 <div>
                   <label class="text-sm font-medium text-gray-500">Created By</label>
-                  <p class="text-lg font-semibold text-gray-900">{{ getClientInfo?.created_by }}</p>
+                  <p class="text-lg font-semibold text-gray-900">{{ getClientInfo?.created_by || (activeTab === 'comparison' ? clientData.customer_info.core_banking.created_by : '') }}</p>
                 </div>
               </div>
             </div>
             
-            <!-- Issue and Expiry Dates -->
-            <div class="mt-6 pt-6 border-t border-gray-200">
+            <!-- Mobile Banking Info (only for comparison tab) -->
+            <div v-if="activeTab === 'comparison'" class="mt-6 pt-6 border-t border-gray-200">
+              <h3 class="text-lg font-semibold text-gray-800 mb-3">Mobile Banking Information</h3>
+              <div class="grid md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                  <div>
+                    <label class="text-sm font-medium text-gray-500">Customer ID</label>
+                    <p class="text-lg font-semibold text-gray-900">{{ clientData.customer_info.mobile_banking.customer_id }}</p>
+                  </div>
+                </div>
+                <div class="space-y-4">
+                  <div>
+                    <label class="text-sm font-medium text-gray-500">Total Accounts</label>
+                    <p class="text-lg font-semibold text-gray-900">{{ clientData.customer_info.mobile_banking.total_accounts }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Issue and Expiry Dates (hide for comparison tab) -->
+            <div v-if="activeTab !== 'comparison'" class="mt-6 pt-6 border-t border-gray-200">
               <div class="grid md:grid-cols-2 gap-6">
                 <div class="flex items-center gap-3">
                   <div class="bg-amber-100 p-2 rounded-lg">
@@ -255,6 +292,57 @@
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Account Summary Stats (for comparison tab) -->
+        <div v-if="activeTab === 'comparison' && clientData.summary" class="bg-white rounded-lg shadow-md overflow-hidden">
+          <div class="bg-gradient-to-r from-purple-500 to-indigo-600 px-6 py-4">
+            <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+              System Comparison Summary
+            </h2>
+          </div>
+          <div class="p-6">
+            <div class="grid md:grid-cols-4 gap-4 text-center">
+              <div class="bg-blue-50 p-4 rounded-lg">
+                <p class="text-2xl font-bold text-blue-600">{{ clientData.summary.total_accounts_in_mobile_banking }}</p>
+                <p class="text-sm text-blue-700">Mobile Banking Accounts</p>
+              </div>
+              <div class="bg-green-50 p-4 rounded-lg">
+                <p class="text-2xl font-bold text-green-600">{{ clientData.summary.total_accounts_in_core_banking }}</p>
+                <p class="text-sm text-green-700">Core Banking Accounts</p>
+              </div>
+              <div class="bg-purple-50 p-4 rounded-lg">
+                <p class="text-2xl font-bold text-purple-600">{{ clientData.summary.matching_accounts }}</p>
+                <p class="text-sm text-purple-700">Matching Accounts</p>
+              </div>
+              <div class="bg-red-50 p-4 rounded-lg">
+                <p class="text-2xl font-bold text-red-600">{{ clientData.summary.missing_in_mobile_banking }}</p>
+                <p class="text-sm text-red-700">Missing in Mobile</p>
+              </div>
+            </div>
+            
+            <div class="mt-6 pt-4 border-t border-gray-200">
+              <div class="flex gap-3 mb-3">
+                <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                  {{ Math.round((clientData.summary.matching_accounts / clientData.summary.total_accounts_in_core_banking) * 100) }}% Sync Rate
+                </span>
+                <span v-if="clientData.contact_details?.phone_number_match" class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                  Phone Number Match
+                </span>
+                <span v-else class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+                  Phone Number Mismatch
+                </span>
+              </div>
+              
+              <p class="text-sm text-gray-600">
+                <span class="font-medium">Phone Queried:</span> 
+                {{ clientData.contact_details?.mobile_banking_query_phone }}
+              </p>
             </div>
           </div>
         </div>
@@ -297,6 +385,104 @@
                 </div>
                 <p class="text-2xl font-bold text-gray-900">{{ clientData.summary.total_contacts }}</p>
                 <p class="text-sm text-gray-600">Total Contacts</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Account Comparison (for comparison tab) -->
+        <div v-if="activeTab === 'comparison' && clientData.AccountMobile && clientData.AccountCoreBank" class="bg-white rounded-lg shadow-md overflow-hidden">
+          <div class="bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-4">
+            <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+              </svg>
+              Account System Comparison
+            </h2>
+          </div>
+          <div class="p-6">
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account Number</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account Name</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Currency</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">System</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <!-- Mobile Banking Accounts -->
+                  <template v-for="(account, index) in clientData.AccountMobile.accounts" :key="`mobile-${index}`">
+                    <tr class="bg-blue-50 hover:bg-blue-100 transition-colors">
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ account.account_no }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ account.account_name }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ account.account_type }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ account.account_currency }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                          {{ account.status }}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                          Mobile Banking
+                        </span>
+                      </td>
+                    </tr>
+                  </template>
+                  
+                  <!-- Core Banking Accounts -->
+                  <template v-for="(account, index) in clientData.AccountCoreBank.accounts" :key="`core-${index}`">
+                    <tr :class="[
+                      'hover:bg-green-100 transition-colors',
+                      account.exists_in_mobile ? 'bg-green-50' : 'bg-red-50'
+                    ]">
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ account.account_no }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ account.account_name }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {{ account.account_type === 'C' ? 'CURRENT' : (account.account_type === 'T' ? 'TD12' : account.account_type) }}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ account.account_currency }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <span :class="[
+                          'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
+                          account.status === 'A' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        ]">
+                          {{ account.status === 'A' ? 'Active' : (account.status === 'N' ? 'New/Inactive' : account.status) }}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center gap-2">
+                          <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            Core Banking
+                          </span>
+                          <span v-if="!account.exists_in_mobile" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                            Missing in Mobile
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+              
+              <!-- Legend -->
+              <div class="mt-4 flex flex-wrap gap-3 text-xs text-gray-600">
+                <span class="inline-flex items-center">
+                  <span class="w-3 h-3 inline-block bg-green-50 mr-1"></span>
+                  Account in both systems
+                </span>
+                <span class="inline-flex items-center">
+                  <span class="w-3 h-3 inline-block bg-blue-50 mr-1"></span>
+                  Mobile Banking record
+                </span>
+                <span class="inline-flex items-center">
+                  <span class="w-3 h-3 inline-block bg-red-50 mr-1"></span>
+                  Core Banking record not in Mobile
+                </span>
               </div>
             </div>
           </div>
@@ -363,10 +549,10 @@
             </h2>
           </div>
           <div class="p-6">
-            <div v-if="clientData.contact_details?.length > 0" class="space-y-3">
+            <div v-if="getContactDetails?.length > 0" class="space-y-3">
               <div
-                v-for="contact in clientData.contact_details"
-                :key="contact.contact_ref_no"
+                v-for="contact in getContactDetails"
+                :key="contact.contact_ref_no || contact.contact_detail"
                 class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
               >
                 <div class="flex items-center gap-3">
@@ -448,6 +634,15 @@ const AccountIcon = {
   `
 }
 
+// Comparison icon component
+const ComparisonIcon = {
+  template: `
+    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+    </svg>
+  `
+}
+
 // Reactive data
 const activeTab = ref('phone')
 const clientData = ref(null)
@@ -462,7 +657,8 @@ const searchData = ref({
   globalId: '',
   phoneNumberCombo: '20',
   clientName: '',
-  customerId: ''
+  customerId: '',
+  comparisonPhone: ''
 })
 
 // Search tabs configuration
@@ -470,7 +666,8 @@ const searchTabs = [
   { id: 'phone', name: 'Phone Number', icon: PhoneIcon },
   { id: 'idphone', name: 'ID Card or Passport + Phone', icon: IdCardIcon },
   { id: 'name', name: 'Client Name', icon: UserIcon },
-  { id: 'accounts', name: 'Account Info', icon: AccountIcon }
+  { id: 'accounts', name: 'Account Info', icon: AccountIcon },
+  { id: 'comparison', name: 'Mobile/Core Comparison', icon: ComparisonIcon }
 ]
 
 // API configuration
@@ -487,6 +684,8 @@ const isValidSearch = computed(() => {
       return searchData.value.clientName.trim().length > 0
     case 'accounts':
       return searchData.value.customerId.trim().length > 0
+    case 'comparison':
+      return searchData.value.comparisonPhone.trim().length > 0
     default:
       return false
   }
@@ -497,8 +696,8 @@ const getClientInfo = computed(() => {
   if (!clientData.value) return null
   
   // For accounts API response
-  if (clientData.value.customer_info) {
-    return clientData.value.customer_info
+  if (clientData.value.customer_info && activeTab.value !== 'comparison') {
+    return clientData.value.customer_info.core_banking
   }
   
   // For contact search API response
@@ -507,6 +706,23 @@ const getClientInfo = computed(() => {
   }
   
   return null
+})
+
+// Computed property to get contact details
+const getContactDetails = computed(() => {
+  if (!clientData.value) return []
+  
+  // For comparison tab
+  if (activeTab.value === 'comparison' && clientData.value.contact_details?.core_banking) {
+    return clientData.value.contact_details.core_banking
+  }
+  
+  // For other tabs
+  if (clientData.value.contact_details && !Array.isArray(clientData.value.contact_details)) {
+    return []
+  }
+  
+  return clientData.value.contact_details || []
 })
 
 // Search function using Nuxt's $fetch
@@ -544,11 +760,15 @@ const searchClientInfo = async () => {
         endpoint = `${apiBaseUrl}/api/corebank/accounts/${searchData.value.customerId.trim()}`
         // No query params needed for this endpoint
         break
+      case 'comparison':
+        endpoint = `${apiBaseUrl}/api/comparison/phone/${searchData.value.comparisonPhone.trim()}`
+        // No query params needed for this endpoint
+        break
     }
 
     let data
-    if (activeTab.value === 'accounts') {
-      // For accounts endpoint, use direct path parameter
+    if (activeTab.value === 'accounts' || activeTab.value === 'comparison') {
+      // For accounts and comparison endpoints, use direct path parameter
       data = await $fetch(endpoint, {
         method: 'GET',
         headers: {
@@ -581,9 +801,11 @@ const searchClientInfo = async () => {
     
     // Handle 404 errors with user-friendly message
     if (err.status === 404 || (err.message && err.message.includes('404'))) {
-      error.value = activeTab.value === 'accounts' 
-        ? 'Customer not found in LBB Core banking system' 
-        : 'Not Found Customer on LBB Core banking system'
+      error.value = activeTab.value === 'comparison'
+        ? 'No comparison data found for this phone number'
+        : (activeTab.value === 'accounts'
+          ? 'Customer not found in LBB Core banking system'
+          : 'Not Found Customer on LBB Core banking system')
     } else if (err.status === 500) {
       error.value = 'Internal server error. Please try again later.'
     } else if (err.status === 400) {
