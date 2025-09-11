@@ -10,6 +10,9 @@ const priorityRoutes = require('./priorityRoutes');
 const attachmentRoutes = require('./attachmentRoutes');
 const adminRoutes = require('./adminRoutes');
 const settingRoutes = require('./settingRoutes');
+const eodRoutes = require('./eod');
+const eodSessionRoutes = require('./eodSession');
+const branchRoutes = require('./branchRoutes');
 
 
 
@@ -23,6 +26,9 @@ router.use('/priorities', priorityRoutes);
 router.use('/attachments', attachmentRoutes);
 router.use('/admin', adminRoutes);
 router.use('/settings', settingRoutes);
+router.use('/eod', eodRoutes);
+router.use('/eod', eodSessionRoutes); 
+router.use('/branches', branchRoutes);
 
 
 

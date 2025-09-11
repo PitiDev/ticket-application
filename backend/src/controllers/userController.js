@@ -6,8 +6,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer'); // ต้องติดตั้ง nodemailer ก่อนใช้งาน: npm install nodemailer
 
-
-// Login
+// Login function with updated JWT payload
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -28,8 +27,9 @@ exports.login = async (req, res) => {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
+        // Include branch_id in the JWT payload
         const token = jwt.sign(
-            { id: user.id, role: user.role },
+            { id: user.id, role: user.role, branch_id: user.branch_id },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
@@ -46,9 +46,9 @@ exports.login = async (req, res) => {
                 avatar_url: user.avatar_url,
                 department_ids: user.department_ids,
                 created_at: user.created_at,
+                branch_id: user.branch_id,
                 updated_at: user.updated_at,
                 last_login: user.last_login
-
             }
         });
     } catch (error) {
@@ -359,57 +359,57 @@ const crypto = require('crypto');
 
 // ฟังก์ชันสำหรับการลืมรหัสผ่าน
 exports.forgotPassword = async (req, res) => {
-  const conn = await db.getConnection();
-  try {
-    await conn.beginTransaction();
-    
-    const { email } = req.body;
-    
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email is required'
-      });
-    }
-    
-    // ตรวจสอบว่ามีอีเมลนี้ในระบบหรือไม่
-    const [users] = await conn.execute(
-      'SELECT id, email, username FROM users WHERE email = ?',
-      [email]
-    );
-    
-    // ถ้าไม่พบอีเมล ให้ส่งสถานะสำเร็จเหมือนกัน (เพื่อความปลอดภัย ไม่ให้รู้ว่าอีเมลมีอยู่ในระบบหรือไม่)
-    if (users.length === 0) {
-      return res.json({
-        success: true,
-        message: 'If your email exists in our system, you will receive password reset instructions'
-      });
-    }
-    
-    const user = users[0];
-    
-    // สร้าง token สำหรับรีเซ็ตรหัสผ่าน
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenExpiry = new Date();
-    resetTokenExpiry.setHours(resetTokenExpiry.getHours() + 1); // หมดอายุใน 1 ชั่วโมง
-    
-    // เก็บ token ลงฐานข้อมูล
-    // ตรวจสอบว่ามีตาราง reset_tokens หรือไม่
+    const conn = await db.getConnection();
     try {
-      // ลบ token เก่า (ถ้ามี)
-      await conn.execute(
-        'DELETE FROM reset_tokens WHERE user_id = ?',
-        [user.id]
-      );
-      
-      // เพิ่ม token ใหม่
-      await conn.execute(
-        'INSERT INTO reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?)',
-        [user.id, resetToken, resetTokenExpiry]
-      );
-    } catch (err) {
-      // ถ้าไม่มีตาราง reset_tokens ให้สร้างก่อน
-      await conn.execute(`
+        await conn.beginTransaction();
+
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email is required'
+            });
+        }
+
+        // ตรวจสอบว่ามีอีเมลนี้ในระบบหรือไม่
+        const [users] = await conn.execute(
+            'SELECT id, email, username FROM users WHERE email = ?',
+            [email]
+        );
+
+        // ถ้าไม่พบอีเมล ให้ส่งสถานะสำเร็จเหมือนกัน (เพื่อความปลอดภัย ไม่ให้รู้ว่าอีเมลมีอยู่ในระบบหรือไม่)
+        if (users.length === 0) {
+            return res.json({
+                success: true,
+                message: 'If your email exists in our system, you will receive password reset instructions'
+            });
+        }
+
+        const user = users[0];
+
+        // สร้าง token สำหรับรีเซ็ตรหัสผ่าน
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetTokenExpiry = new Date();
+        resetTokenExpiry.setHours(resetTokenExpiry.getHours() + 1); // หมดอายุใน 1 ชั่วโมง
+
+        // เก็บ token ลงฐานข้อมูล
+        // ตรวจสอบว่ามีตาราง reset_tokens หรือไม่
+        try {
+            // ลบ token เก่า (ถ้ามี)
+            await conn.execute(
+                'DELETE FROM reset_tokens WHERE user_id = ?',
+                [user.id]
+            );
+
+            // เพิ่ม token ใหม่
+            await conn.execute(
+                'INSERT INTO reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?)',
+                [user.id, resetToken, resetTokenExpiry]
+            );
+        } catch (err) {
+            // ถ้าไม่มีตาราง reset_tokens ให้สร้างก่อน
+            await conn.execute(`
         CREATE TABLE IF NOT EXISTS reset_tokens (
           id INT AUTO_INCREMENT PRIMARY KEY,
           user_id INT NOT NULL,
@@ -419,51 +419,51 @@ exports.forgotPassword = async (req, res) => {
           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
       `);
-      
-      // แล้วทำการเพิ่ม token อีกครั้ง
-      await conn.execute(
-        'INSERT INTO reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?)',
-        [user.id, resetToken, resetTokenExpiry]
-      );
+
+            // แล้วทำการเพิ่ม token อีกครั้ง
+            await conn.execute(
+                'INSERT INTO reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?)',
+                [user.id, resetToken, resetTokenExpiry]
+            );
+        }
+
+        // สร้าง URL สำหรับรีเซ็ตรหัสผ่าน
+        const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+
+        // ส่งอีเมล (ใช้ emailService)
+        try {
+            // Import email service
+            const emailService = require('../services/emailService');
+
+            await emailService.sendPasswordResetEmail({
+                email: user.email,
+                username: user.username,
+                resetUrl: resetUrl
+            });
+        } catch (emailError) {
+            console.error('Error sending email:', emailError);
+            // ยังคงทำงานต่อแม้จะส่งอีเมลไม่สำเร็จ เพื่อให้สามารถทดสอบได้
+        }
+
+        await conn.commit();
+
+        // ส่งสถานะสำเร็จกลับไป
+        res.json({
+            success: true,
+            message: 'If your email exists in our system, you will receive password reset instructions'
+        });
+
+    } catch (error) {
+        await conn.rollback();
+        console.error('Forgot password error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'An error occurred while processing your request',
+            error: error.message
+        });
+    } finally {
+        conn.release();
     }
-    
-    // สร้าง URL สำหรับรีเซ็ตรหัสผ่าน
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
-    
-    // ส่งอีเมล (ใช้ emailService)
-    try {
-      // Import email service
-      const emailService = require('../services/emailService');
-      
-      await emailService.sendPasswordResetEmail({
-        email: user.email,
-        username: user.username,
-        resetUrl: resetUrl
-      });
-    } catch (emailError) {
-      console.error('Error sending email:', emailError);
-      // ยังคงทำงานต่อแม้จะส่งอีเมลไม่สำเร็จ เพื่อให้สามารถทดสอบได้
-    }
-    
-    await conn.commit();
-    
-    // ส่งสถานะสำเร็จกลับไป
-    res.json({
-      success: true,
-      message: 'If your email exists in our system, you will receive password reset instructions'
-    });
-    
-  } catch (error) {
-    await conn.rollback();
-    console.error('Forgot password error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'An error occurred while processing your request',
-      error: error.message
-    });
-  } finally {
-    conn.release();
-  }
 };
 
 // ฟังก์ชันสำหรับการรีเซ็ตรหัสผ่าน

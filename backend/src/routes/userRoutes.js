@@ -10,8 +10,9 @@ router.post('/register', userController.register);
 
 // Protected routes
 // router.use(authMiddleware);
-router.get('/profile', userController.getProfile);
-router.put('/profile', userController.updateProfile);
+router.get('/profile', authMiddleware, userController.getProfile);
+router.put('/profile', authMiddleware, userController.updateProfile);
+router.get('/me', authMiddleware, userController.getProfile); // Assuming you have a /me endpoint
 router.get('/', userController.getUsers);
 
 router.post('/change-password',  userController.changePassword);
