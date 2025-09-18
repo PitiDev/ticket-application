@@ -43,7 +43,7 @@
               <NuxtLink to="/teller/check-eod"
                 class="border-transparent text-gray-500 hover:border-amber-300 hover:text-amber-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200"
                 :class="isActiveRoute('/tickets/assigned') ? 'border-amber-500 text-amber-600 font-semibold' : ''">
-               Teller EOD
+               Branch EOD
               </NuxtLink>
 
               <!-- Admin area menu - only visible to admins -->

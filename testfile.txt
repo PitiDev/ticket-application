@@ -414,3 +414,12 @@
         </div>
       </Dialog>
     </TransitionRoot>
+
+
+
+
+
+
+
+import GoldPerformanceChart from '~/components/GoldPerformanceChart.vue'
+import GoldPortfolioDonut from '~/components/GoldPortfolioDonut.vue'

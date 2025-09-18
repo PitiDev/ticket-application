@@ -32,7 +32,10 @@
     <div v-if="eodData && !eodData.session && !loading"
       class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
       No EOD session found for {{ formatDate(selectedDate) }}.
-      <button class="underline ml-2">Create EOD Session</button>
+      <NuxtLink to="/teller/create-eod-session">
+        <button class="underline ml-2">Create EOD Session</button>
+      </NuxtLink>
+
     </div>
 
     <!-- EOD Session Summary Card -->
@@ -193,7 +196,7 @@
               <td class="py-3 px-4">{{ checklist.completed_by_name || 'Not completed' }}</td>
               <td class="py-3 px-4">{{ formatDateTime(checklist.started_at) }}</td>
               <td class="py-3 px-4">{{ checklist.completed_at ? formatDateTime(checklist.completed_at) : 'Not completed'
-                }}</td>
+              }}</td>
               <td class="py-3 px-4">
                 <button @click="viewChecklistDetails(checklist.id)" class="text-blue-500 hover:text-blue-700">
                   View Details
@@ -401,7 +404,7 @@ const fetchEodData = async () => {
   loading.value = true;
 
   try {
-    const response = await fetch(`http://localhost:9000/api/eod/date/${selectedDate.value}`, {
+    const response = await fetch(`http://172.16.4.62:9000/api/eod/date/${selectedDate.value}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
@@ -428,7 +431,7 @@ const fetchCurrentDay = async () => {
   loading.value = true;
 
   try {
-    const response = await fetch('http://localhost:9000/api/eod/current', {
+    const response = await fetch('http://172.16.4.62:9000/api/eod/current', {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
@@ -457,7 +460,7 @@ const viewChecklistDetails = async (checklistId) => {
   checklistDetails.value = null;
 
   try {
-    const response = await fetch(`http://localhost:9000/api/eod/checklist/${checklistId}`, {
+    const response = await fetch(`http://172.16.4.62:9000/api/eod/checklist/${checklistId}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
