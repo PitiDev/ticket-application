@@ -7,7 +7,7 @@
                     <label for="customer-id" class="block text-sm font-medium text-gray-700 mb-1">Customer ID</label>
                     <div class="relative rounded-md shadow-sm">
                         <input type="text" id="customer-id" v-model="searchCustomerId"
-                            placeholder="Enter customer ID (e.g. 2508-0000002-5)"
+                            placeholder="Enter customer ID (e.g. 2508-0000002-xxxx)"
                             class="block w-full rounded-md border-gray-300 pl-4 pr-12 py-3 focus:border-amber-500 focus:ring-amber-500 text-gray-900"
                             :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': inputError }" />
                         <div class="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -1348,7 +1348,7 @@ onMounted(() => {
     }
 
     // Initialize with the default customer ID or from route
-    const initialCustomerId = route.query.id || '2508-0000002-5'
+    const initialCustomerId = route.query.id || ''
     searchCustomerId.value = initialCustomerId
 
     // Fetch data for the initial customer ID

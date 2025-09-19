@@ -13,6 +13,7 @@ const settingRoutes = require('./settingRoutes');
 const eodRoutes = require('./eod');
 const eodSessionRoutes = require('./eodSession');
 const branchRoutes = require('./branchRoutes');
+const downloadRoutes = require('./downloadRoutes'); // Add this line
 
 
 
@@ -29,7 +30,7 @@ router.use('/settings', settingRoutes);
 router.use('/eod', eodRoutes);
 router.use('/eod', eodSessionRoutes); 
 router.use('/branches', branchRoutes);
-
+router.use('/downloads', downloadRoutes);
 
 
 
