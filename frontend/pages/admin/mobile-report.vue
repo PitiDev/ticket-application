@@ -1,659 +1,783 @@
 <template>
-  <div class="min-h-screen from-gray-50 to-gray-100">
-    <!-- Header -->
-    <div class="bg-gradient-to-r rounded-lg from-red-500 via-red-400 to-amber-500 shadow-xl shadow-yello-500/20">
-      <div class="px-6 py-8 text-center">
-        <h1 class="flex items-center justify-center gap-3 text-3xl font-bold text-white drop-shadow-lg">
-          <span class="text-4xl">
-            <img src="assets/images/lbb_plus_gold.png" alt="" class="w-12 h-12">
-          </span>
-          LBB Plus Banking Report
-        </h1>
-        <p class="mt-2 text-yellow-100 font-medium">ລາຍງານພາບລວມຂອງທຸລະກຳຜ່ານ LBB Plus Mobile Application</p>
+  <div ref="reportContent" class="min-h-screen from-gray-50 to-gray-100">
+    <div>
+      <!-- Header -->
+      <div class="bg-gradient-to-r rounded-lg from-red-500 via-red-400 to-amber-500 shadow-xl shadow-yello-500/20">
+        <div class="px-6 py-8 text-center">
+          <h1 class="flex items-center justify-center gap-3 text-3xl font-bold text-white drop-shadow-lg">
+            <span class="text-4xl">
+              <img src="assets/images/lbb_plus_gold.png" alt="" class="w-12 h-12">
+            </span>
+            LBB Plus Banking Report
+          </h1>
+          <p class="mt-2 text-yellow-100 font-medium">ລາຍງານພາບລວມຂອງທຸລະກຳຜ່ານ LBB Plus Mobile Application</p>
+        </div>
       </div>
-    </div>
-    <br>
+      <br>
 
-    <!-- Date Range Controls -->
-    <div class="bg-white border-b border-gray-200 shadow-sm sticky rounded-lg">
-      <div class="px-6 py-4 max-w-7xl mx-auto">
-        <div class="flex flex-col lg:flex-row gap-4 items-center justify-between">
-          <div class="flex flex-col sm:flex-row gap-4 items-center">
-            <!-- Quick Presets -->
-            <div class="flex flex-wrap gap-2">
-              <button v-for="preset in datePresets" :key="preset.label" @click="setDatePreset(preset)" :class="[
-                'px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200',
-                selectedPreset === preset.label
-                  ? 'bg-yellow-500 text-white shadow-md'
-                  : 'bg-gray-100 text-gray-700 hover:bg-yellow-100 hover:text-yellow-700'
-              ]">
-                {{ preset.label }}
+      <!-- Date Range Controls -->
+      <div class="bg-white border-b border-gray-200 shadow-sm sticky rounded-lg">
+        <div class="px-6 py-4 max-w-7xl mx-auto">
+          <div class="flex flex-col lg:flex-row gap-4 items-center justify-between">
+            <div class="flex flex-col sm:flex-row gap-4 items-center">
+              <!-- Quick Presets -->
+              <div class="flex flex-wrap gap-2">
+                <button v-for="preset in datePresets" :key="preset.label" @click="setDatePreset(preset)" :class="[
+                  'px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200',
+                  selectedPreset === preset.label
+                    ? 'bg-yellow-500 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-yellow-100 hover:text-yellow-700'
+                ]">
+                  {{ preset.label }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Custom Date Inputs -->
+            <div class="flex flex-col sm:flex-row gap-3 items-center">
+              <div class="flex items-center gap-2">
+                <label class="text-sm font-medium text-gray-700 whitespace-nowrap">Start Date:</label>
+                <input v-model="startDate" type="date" @change="onDateChange"
+                  class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+              </div>
+              <div class="flex items-center gap-2">
+                <label class="text-sm font-medium text-gray-700 whitespace-nowrap">End Date:</label>
+                <input v-model="endDate" type="date" @change="onDateChange"
+                  class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+              </div>
+              <button @click="applyDateFilter" :disabled="loading || !startDate || !endDate"
+                class="px-4 py-2 bg-gradient-to-r from-yellow-500 to-amber-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
+                🔍 Apply Filter
               </button>
             </div>
           </div>
 
-          <!-- Custom Date Inputs -->
-          <div class="flex flex-col sm:flex-row gap-3 items-center">
-            <div class="flex items-center gap-2">
-              <label class="text-sm font-medium text-gray-700 whitespace-nowrap">Start Date:</label>
-              <input v-model="startDate" type="date" @change="onDateChange"
-                class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+          <!-- Date Range Display -->
+          <div v-if="startDate && endDate" class="mt-3 flex items-center justify-center">
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-2 text-sm">
+              <span class="text-yellow-800 font-medium">
+                📊 Showing data from {{ formatDateDisplay(startDate) }} to {{ formatDateDisplay(endDate) }}
+              </span>
+              <span class="ml-2 text-yellow-600">({{ getDateRangeDays() }} days)</span>
             </div>
-            <div class="flex items-center gap-2">
-              <label class="text-sm font-medium text-gray-700 whitespace-nowrap">End Date:</label>
-              <input v-model="endDate" type="date" @change="onDateChange"
-                class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div v-if="loading" class="flex flex-col items-center justify-center py-20 px-5">
+        <div class="w-12 h-12 border-4 border-yellow-200 border-t-yellow-500 rounded-full animate-spin mb-4"></div>
+        <p class="text-gray-600 text-lg">Loading filtered reports...</p>
+        <p class="text-gray-500 text-sm">{{ loadingMessage }}</p>
+      </div>
+
+      <!-- Error State -->
+      <div v-if="error" class="flex flex-col items-center justify-center py-20 px-5 text-center">
+        <div class="bg-red-50 border border-red-200 rounded-xl p-6 max-w-md">
+          <p class="text-red-600 mb-4 font-medium">{{ error }}</p>
+          <button @click="fetchAllData"
+            class="bg-gradient-to-r from-yellow-500 to-amber-500 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-200">
+            🔄 Retry
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div v-if="isLoggedIn && !loading && !error" class="p-6 space-y-8 max-w-7xl mx-auto">
+
+        <!-- Summary Stats Bar -->
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+            <div class="space-y-2">
+              <div class="text-2xl font-bold text-green-800">
+                {{ (transactionStatusSummary?.buyCompleted || 0) + (transactionStatusSummary?.sellCompleted || 0) }}
+              </div>
+              <div class="text-sm text-green-600 font-medium">COMPLETED Transactions</div>
+              <div class="text-xs text-gray-500">
+                Buy: {{ transactionStatusSummary?.buyCompleted || 0 }} |
+                Sell: {{ transactionStatusSummary?.sellCompleted || 0 }}
+              </div>
             </div>
-            <button @click="applyDateFilter" :disabled="loading || !startDate || !endDate"
-              class="px-4 py-2 bg-gradient-to-r from-yellow-500 to-amber-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
-              🔍 Apply Filter
+            <div class="space-y-2">
+              <div class="text-2xl font-bold text-blue-800">{{ formatCurrency(calculateCompletedAmount(buyTransactions)
+                +
+                calculateTotalAmount(sellTransactions)) }}</div>
+              <div class="text-sm text-blue-600 font-medium">COMPLETED Amount</div>
+              <div class="text-xs text-gray-500">Total completed transaction value</div>
+            </div>
+            <div class="space-y-2">
+              <div class="text-2xl font-bold text-purple-800">{{ formatWeight(calculateCompletedWeight(buyTransactions)
+                +
+                calculateTotalWeight(sellTransactions)) }}g</div>
+              <div class="text-sm text-purple-600 font-medium">COMPLETED Gold Weight</div>
+              <div class="text-xs text-gray-500">Total completed gold processed</div>
+            </div>
+            <div class="space-y-2">
+              <div class="text-2xl font-bold text-amber-800">{{ transactionStatusSummary?.buySuccessRate || 0 }}%</div>
+              <div class="text-sm text-amber-600 font-medium">Buy Success Rate</div>
+              <div class="text-xs text-gray-500">{{ transactionStatusSummary?.buyCompleted || 0 }} completed of {{
+                transactionStatusSummary?.buyTotal || 0 }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Overview Summary Cards -->
+        <div class="space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+            <!-- Buy Gold Card -->
+            <div
+              class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+              <div class="flex items-center justify-between mb-4">
+                <div
+                  class="w-12 h-12 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl flex items-center justify-center text-2xl">
+                  🪙
+                </div>
+                <div class="text-right">
+                  <p class="text-sm text-gray-500 font-medium">Buy Gold (COMPLETED)</p>
+                  <p class="text-2xl font-bold text-green-700">{{ countCompleted(buyTransactions) }}</p>
+                </div>
+              </div>
+              <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">COMPLETED Gold:</span>
+                  <span class="text-lg font-bold text-yellow-600">{{
+                    formatWeight(calculateCompletedWeight(buyTransactions)) }}g</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">Transaction Count:</span>
+                  <span class="text-lg font-bold text-green-600">{{ countCompleted(buyTransactions) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-600">COMPLETED Amount:</span>
+                  <span class="text-sm font-semibold text-yellow-700">{{
+                    formatCurrency(calculateCompletedAmount(buyTransactions)) }}</span>
+                </div>
+              </div>
+              <div class="mt-4 bg-gradient-to-r from-green-50 to-yellow-50 rounded-lg p-3 border border-green-100">
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-green-700">Success Rate:</span>
+                  <span class="text-sm font-bold text-green-800">{{ calculateSuccessRate(buyTransactions) }}%</span>
+                </div>
+                <div class="flex justify-between items-center mt-1">
+                  <span class="text-xs text-orange-700">Pending:</span>
+                  <span class="text-sm font-bold text-orange-800">{{ countPending(buyTransactions) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sell Gold Card -->
+            <div
+              class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+              <div class="flex items-center justify-between mb-4">
+                <div
+                  class="w-12 h-12 bg-gradient-to-r from-red-400 to-red-500 rounded-xl flex items-center justify-center text-2xl">
+                  💰
+                </div>
+                <div class="text-right">
+                  <p class="text-sm text-gray-500 font-medium">Sell Gold</p>
+                  <p class="text-2xl font-bold text-gray-800">{{ sellTransactions.length }}</p>
+                </div>
+              </div>
+              <div class="space-y-1">
+                <p class="text-sm text-gray-600">{{ formatWeight(calculateTotalWeight(sellTransactions)) }}g total</p>
+                <p class="text-sm font-semibold text-red-600">{{ formatCurrency(calculateTotalAmount(sellTransactions))
+                  }}
+                </p>
+              </div>
+              <div class="mt-4 bg-red-50 rounded-lg p-3">
+                <p class="text-xs text-red-700">Average: {{ formatWeight(calculateAverageWeight(sellTransactions)) }}g
+                </p>
+              </div>
+            </div>
+
+            <!-- KYC Card -->
+            <div
+              class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+              <div class="flex items-center justify-between mb-4">
+                <div
+                  class="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-500 rounded-xl flex items-center justify-center text-2xl">
+                  📋
+                </div>
+                <div class="text-right">
+                  <p class="text-sm text-gray-500 font-medium">KYC Applications</p>
+                  <p class="text-2xl font-bold text-gray-800">{{ kycDateRangeData.TOTAL_KYC_COUNT || 0 }}</p>
+                </div>
+              </div>
+              <div class="space-y-1">
+                <p class="text-sm text-green-600">{{ kycDateRangeData.APPROVED || 0 }} approved</p>
+                <p class="text-sm text-green-300">{{ kycDateRangeData.PRE_APPROVED || 0 }} pre_approved</p>
+
+                <p class="text-sm font-semibold text-blue-600">{{ kycDateRangeData.PROCESSING || 0 }} processing</p>
+                <p class="text-sm font-semibold text-yellow-600">{{ kycDateRangeData.PENDING || 0 }} pending</p>
+                <p class="text-sm font-semibold text-yellow-400">{{ kycDateRangeData.VERIFY || 0 }} verify</p>
+                <p class="text-sm font-semibold text-blue-400">{{ kycDateRangeData.ADJUST || 0 }} adjust</p>
+                <p class="text-sm font-semibold text-gray-400">{{ kycDateRangeData.NONE || 0 }} none</p>
+
+              </div>
+              <div class="mt-4 bg-red-50 rounded-lg p-3">
+                <p class="text-xs text-red-700 text-bold">{{ kycDateRangeData.REJECTED || 0 }} rejected</p>
+              </div>
+            </div>
+
+            <!-- Top-up Card -->
+            <div
+              class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+              <div class="flex items-center justify-between mb-4">
+                <div
+                  class="w-12 h-12 bg-gradient-to-r from-green-400 to-green-500 rounded-xl flex items-center justify-center text-2xl">
+                  💳
+                </div>
+                <div class="text-right">
+                  <p class="text-sm text-gray-500 font-medium">Top-ups</p>
+                  <p class="text-2xl font-bold text-gray-800">{{ topupDateRangeData.overall?.totalCount || 0 }}</p>
+                </div>
+              </div>
+              <div class="space-y-1">
+                <p class="text-sm text-gray-600">LDB: {{ topupDateRangeData.overall?.ldbCount || 0 }}</p>
+                <p class="text-sm font-semibold text-green-600">PSV: {{ topupDateRangeData.overall?.psvCount || 0 }}</p>
+              </div>
+              <div class="mt-4 bg-green-50 rounded-lg p-3">
+                <p class="text-xs text-green-700">Amount: {{ formatCurrency(topupDateRangeData.overall?.totalAmount) ||
+                  0
+                  }}</p>
+              </div>
+            </div>
+
+            <!-- NEW: App Downloads Card -->
+            <div
+              class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+              <div class="flex items-center justify-between mb-4">
+                <div
+                  class="w-12 h-12 bg-gradient-to-r from-indigo-400 to-indigo-500 rounded-xl flex items-center justify-center text-2xl">
+                  📱
+                </div>
+                <div class="text-right">
+                  <p class="text-sm text-gray-500 font-medium">App Downloads</p>
+                  <p class="text-2xl font-bold text-gray-800">{{ formatNumber((appDownloads.ios || 0) +
+                    (appDownloads.android || 0)) }}
+                  </p>
+                </div>
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-blue-600 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 24 24"
+                      fill="currentColor">
+                      <path
+                        d="M18.71,19.5C17.88,20.74 17,21.95 15.66,21.97C14.32,22 13.89,21.18 12.37,21.18C10.84,21.18 10.37,21.95 9.1,22C7.79,22.05 6.8,20.68 5.96,19.47C4.25,17 2.94,12.45 4.7,9.39C5.57,7.87 7.13,6.91 8.82,6.88C10.1,6.86 11.32,7.75 12.11,7.75C12.89,7.75 14.37,6.68 15.92,6.84C16.57,6.87 18.39,7.1 19.56,8.82C19.47,8.88 17.39,10.1 17.41,12.63C17.44,15.65 20.06,16.66 20.09,16.67C20.06,16.74 19.67,18.11 18.71,19.5M13,3.5C13.73,2.67 14.94,2.04 15.94,2C16.07,3.17 15.6,4.35 14.9,5.19C14.21,6.04 13.07,6.7 11.95,6.61C11.8,5.46 12.36,4.26 13,3.5Z" />
+                    </svg>
+                    iOS:
+                  </span>
+                  <span class="text-lg font-bold text-blue-700">{{ formatNumber(appDownloads.ios || 0) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-green-600 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 24 24"
+                      fill="currentColor">
+                      <path
+                        d="M7.2,16.8H9.3V14.7H7.2M12.5,4.8C12.5,4.8 5.4,4.8 5.4,4.8C4.6,4.8 4,5.4 4,6.2V17.8C4,18.6 4.6,19.2 5.4,19.2H14.7C15.5,19.2 16.1,18.6 16.1,17.8V9.4L12.5,4.8M14.7,17.8H5.4V6.2H11.5V10.4H14.7V17.8M11.5,14.7V16.8H13.6V14.7H11.5Z" />
+                    </svg>
+                    Android:
+                  </span>
+                  <span class="text-lg font-bold text-green-700">{{ formatNumber(appDownloads.android || 0) }}</span>
+                </div>
+              </div>
+              <div class="mt-4 bg-indigo-50 rounded-lg p-3">
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-indigo-700">Last Updated:</span>
+                  <span class="text-xs font-medium text-indigo-800">{{ formatDatetime(appDownloads.update_date)
+                    }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <!-- Buy vs Sell Chart -->
+          <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
+            <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+              📈 Buy COMPLETED vs Sell Daily Comparison
+            </h3>
+            <div class="h-64">
+              <canvas ref="buyVsSellChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Transaction Status Chart -->
+          <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
+            <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+              🎯 Transaction Status Distribution
+            </h3>
+            <div class="h-64">
+              <canvas ref="transactionStatusChart"></canvas>
+            </div>
+
+            <!-- Add summary stats below the chart -->
+            <div v-if="transactionStatusSummary" class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+              <div class="bg-green-50 rounded-lg p-3">
+                <div class="text-lg font-bold text-green-800">{{ transactionStatusSummary.buyCompleted }}</div>
+                <div class="text-xs text-green-600">Buy Completed</div>
+              </div>
+              <div class="bg-yellow-50 rounded-lg p-3">
+                <div class="text-lg font-bold text-yellow-800">{{ transactionStatusSummary.buyPending }}</div>
+                <div class="text-xs text-yellow-600">Buy Pending</div>
+              </div>
+              <div class="bg-red-50 rounded-lg p-3">
+                <div class="text-lg font-bold text-red-800">{{ transactionStatusSummary.buyFailed }}</div>
+                <div class="text-xs text-red-600">Buy Failed</div>
+              </div>
+              <div class="bg-purple-50 rounded-lg p-3">
+                <div class="text-lg font-bold text-purple-800">{{ transactionStatusSummary.sellCompleted }}</div>
+                <div class="text-xs text-purple-600">Sell Completed</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Daily Trends Line Chart -->
+          <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100 lg:col-span-2">
+            <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+              📊 Daily Transaction Trends (Buy COMPLETED vs Sell)
+            </h3>
+            <div class="h-80">
+              <canvas ref="dailyTrendsChart"></canvas>
+            </div>
+          </div>
+
+          <!-- KYC Status Chart -->
+          <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
+            <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+              📋 KYC Applications Status
+            </h3>
+            <div class="h-64">
+              <canvas ref="kycStatusChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Top-up Distribution Chart -->
+          <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
+            <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+              💳 Top-up Provider Distribution
+            </h3>
+            <div class="h-64">
+              <canvas ref="topupChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Analysis Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Buy Gold Analysis -->
+          <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
+            <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+              🪙 Buy Gold Analysis
+            </h3>
+            <div class="space-y-4">
+              <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-green-700 font-medium">COMPLETED Transactions</span>
+                  <span class="text-2xl font-bold text-green-800">{{ countCompleted(buyTransactions) }}</span>
+                </div>
+              </div>
+              <div class="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-4 border border-yellow-100">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-yellow-700 font-medium">COMPLETED Gold Weight</span>
+                  <span class="text-xl font-bold text-yellow-800">{{
+                    formatWeight(calculateCompletedWeight(buyTransactions)) }}g</span>
+                </div>
+              </div>
+              <div class="bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-4 border border-orange-100">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-orange-700 font-medium">Pending</span>
+                  <span class="text-2xl font-bold text-orange-800">{{ countPending(buyTransactions) }}</span>
+                </div>
+              </div>
+              <div class="space-y-2">
+                <div class="flex justify-between">
+                  <span class="text-gray-600">COMPLETED Amount:</span>
+                  <span class="font-bold text-green-600">{{ formatCurrency(calculateCompletedAmount(buyTransactions))
+                    }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Success Rate:</span>
+                  <span class="font-bold text-green-600">{{ calculateSuccessRate(buyTransactions) }}%</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Avg COMPLETED Weight:</span>
+                  <span class="font-bold text-yellow-600">{{ countCompleted(buyTransactions) > 0 ?
+                    formatWeight(calculateCompletedWeight(buyTransactions) / countCompleted(buyTransactions)) : '0.00'
+                    }}g</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Avg COMPLETED Amount:</span>
+                  <span class="font-bold text-green-600">{{ countCompleted(buyTransactions) > 0 ?
+                    formatCurrency(calculateCompletedAmount(buyTransactions) / countCompleted(buyTransactions)) :
+                    formatCurrency(0) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sell Gold Analysis -->
+          <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
+            <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+              💰 Sell Gold Analysis
+            </h3>
+            <div class="space-y-4">
+              <div class="bg-gradient-to-r from-red-50 to-pink-50 rounded-xl p-4 border border-red-100">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-red-700 font-medium">Total Transactions</span>
+                  <span class="text-2xl font-bold text-red-800">{{ sellTransactions.length }}</span>
+                </div>
+              </div>
+              <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-100">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-purple-700 font-medium">Total Weight</span>
+                  <span class="text-xl font-bold text-purple-800">{{
+                    formatWeight(calculateTotalWeight(sellTransactions))
+                    }}g</span>
+                </div>
+              </div>
+              <div class="space-y-2">
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Total Amount:</span>
+                  <span class="font-bold text-gray-800">{{ formatCurrency(calculateTotalAmount(sellTransactions))
+                    }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Average Amount:</span>
+                  <span class="font-bold text-gray-800">{{ formatCurrency(calculateAverageAmount(sellTransactions))
+                    }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Average Weight:</span>
+                  <span class="font-bold text-gray-800">{{ formatWeight(calculateAverageWeight(sellTransactions))
+                    }}g</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Transactions/Day:</span>
+                  <span class="font-bold text-blue-600">{{ (sellTransactions.length / Math.max(getDateRangeDays(),
+                    1)).toFixed(1) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Net Position Analysis -->
+          <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
+            <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+              ⚖️ Net Position Analysis (COMPLETED)
+            </h3>
+            <div class="space-y-4">
+              <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
+                <div class="text-center">
+                  <p class="text-sm text-blue-700 font-medium mb-1">Net COMPLETED Amount</p>
+                  <p class="text-2xl font-bold" :class="netAmount >= 0 ? 'text-green-800' : 'text-red-800'">
+                    {{ formatCurrency(netAmount) }}
+                  </p>
+                </div>
+              </div>
+              <div class="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-xl p-4 border border-teal-100">
+                <div class="text-center">
+                  <p class="text-sm text-teal-700 font-medium mb-1">Net COMPLETED Weight</p>
+                  <p class="text-2xl font-bold" :class="netWeight >= 0 ? 'text-green-800' : 'text-red-800'">
+                    {{ formatWeight(netWeight) }}g
+                  </p>
+                </div>
+              </div>
+              <div class="space-y-2">
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Buy COMPLETED Volume:</span>
+                  <span class="font-bold text-yellow-600">{{ formatCurrency(calculateCompletedAmount(buyTransactions))
+                    }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Sell Volume:</span>
+                  <span class="font-bold text-red-600">{{ formatCurrency(calculateTotalAmount(sellTransactions))
+                    }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Position Status:</span>
+                  <span class="font-bold" :class="netAmount >= 0 ? 'text-green-600' : 'text-red-600'">
+                    {{ netAmount >= 0 ? 'Positive' : 'Negative' }}
+                  </span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">COMPLETED Buy Count:</span>
+                  <span class="font-bold text-green-600">{{ countCompleted(buyTransactions) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <!-- Recent Sell Transactions -->
+          <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
+            <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+              🔄 Recent Sell Transactions
+              <span class="text-sm font-normal text-gray-500">({{ sellTransactions.length }} total)</span>
+            </h3>
+            <div class="space-y-4 max-h-96 overflow-y-auto">
+              <div v-for="transaction in sellTransactions.slice(0, 10)" :key="transaction.TRANSACTION_ID"
+                class="bg-gradient-to-r from-red-50 to-pink-50 rounded-xl p-4 border border-red-100 hover:shadow-md transition-shadow">
+                <div class="flex justify-between items-start">
+                  <div class="flex-1">
+                    <p class="text-xs font-mono text-red-600 mb-1">{{ transaction.TRANSACTION_ID }}</p>
+                    <p class="text-sm text-gray-700 mb-1">Customer: <span class="font-medium">{{ transaction.CUSTOMER_ID
+                        }}</span></p>
+                    <p class="text-xs text-gray-500">{{ formatDate(transaction.CREATED_AT) }}</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-lg font-bold text-red-600">{{ formatCurrency(transaction.TOTAL_AMOUNT) }}</p>
+                    <p class="text-sm text-gray-600">{{ formatWeight(transaction.GOLD_WEIGHT) }}g</p>
+                    <div v-if="transaction.FEE_AMOUNT > 0" class="text-xs text-gray-500">
+                      Fee: {{ formatCurrency(transaction.FEE_AMOUNT) }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div v-if="sellTransactions.length === 0" class="text-center py-8 text-gray-500">
+                No sell transactions found for the selected date range
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Buy Transactions -->
+          <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
+            <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+              🔄 Recent Buy Transactions
+              <span class="text-sm font-normal text-gray-500">({{ buyTransactions.length }} total)</span>
+            </h3>
+            <div class="space-y-4 max-h-96 overflow-y-auto">
+              <div v-for="transaction in buyTransactions.slice(0, 10)" :key="transaction.ID"
+                class="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-4 border border-yellow-100 hover:shadow-md transition-shadow">
+                <div class="flex justify-between items-start">
+                  <div class="flex-1">
+                    <p class="text-sm text-yellow-700 font-medium mb-1">ID: {{ transaction.ID }}</p>
+                    <p class="text-sm text-gray-700 mb-1">Customer: <span class="font-medium">{{ transaction.CUSTOMER_ID
+                        }}</span></p>
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="text-xs text-gray-500">Status:</span>
+                      <span class="px-2 py-1 rounded-full text-xs font-medium" :class="transaction.STATUS && transaction.STATUS.toLowerCase() === 'completed'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-orange-100 text-orange-700'">
+                        {{ transaction.STATUS || 'N/A' }}
+                      </span>
+                    </div>
+                    <p class="text-xs text-gray-500">{{ formatDate(transaction.CREATED_AT) }}</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-lg font-bold text-yellow-600">{{ formatCurrency(transaction.TOTAL_AMOUNT) }}</p>
+                    <p class="text-sm text-gray-600">{{ formatWeight(transaction.GOLD_WEIGHT) }}g</p>
+                    <p class="text-xs text-gray-500">{{ transaction.DR_CURRENCY_CODE || 'LAK' }}</p>
+                  </div>
+                </div>
+              </div>
+              <div v-if="buyTransactions.length === 0" class="text-center py-8 text-gray-500">
+                No buy transactions found for the selected date range
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Analytics Section -->
+        <div class="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-2xl p-8 shadow-xl">
+          <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-3">
+              🤖 AI Analytics - ການວິເຄາະດ້ວຍປັນຍາປະດິດ
+            </h2>
+            <p class="text-gray-600">Smart insights and analysis powered by Google Gemini AI</p>
+          </div>
+
+          <!-- AI Analysis Control -->
+          <div class="text-center mb-8">
+            <button @click="generateAIAnalysis" :disabled="aiLoading || !hasData"
+              class="px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-bold text-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 mx-auto">
+              <span v-if="!aiLoading" class="text-2xl">🧠</span>
+              <div v-else class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              {{ aiLoading ? 'ກຳລັງວິເຄາະ...' : 'ສ້າງການວິເຄາະດ້ວຍ AI' }}
+            </button>
+            <p v-if="!hasData" class="text-sm text-gray-500 mt-2">
+              ຕ້ອງມີຂໍ້ມູນກ່ອນຈຶ່ງສາມາດວິເຄາະໄດ້
+            </p>
+          </div>
+
+          <!-- AI Error State -->
+          <div v-if="aiError" class="bg-red-50 border border-red-200 rounded-xl p-6 mb-6 text-center">
+            <div class="text-red-600 font-medium mb-2">❌ ຜິດພາດໃນການວິເຄາະ</div>
+            <p class="text-red-500 text-sm">{{ aiError }}</p>
+            <button @click="generateAIAnalysis"
+              class="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+              ລອງໃໝ່
             </button>
           </div>
-        </div>
 
-        <!-- Date Range Display -->
-        <div v-if="startDate && endDate" class="mt-3 flex items-center justify-center">
-          <div class="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-2 text-sm">
-            <span class="text-yellow-800 font-medium">
-              📊 Showing data from {{ formatDateDisplay(startDate) }} to {{ formatDateDisplay(endDate) }}
-            </span>
-            <span class="ml-2 text-yellow-600">({{ getDateRangeDays() }} days)</span>
+          <!-- AI Analysis Results -->
+          <div v-if="aiAnalysis && !aiLoading" class="space-y-6">
+            <!-- Market Overview -->
+            <div class="bg-white rounded-xl p-6 border border-purple-100 shadow-md">
+              <h3 class="text-xl font-bold text-purple-800 mb-4 flex items-center gap-2">
+                📊 ພາບລວມຕະຫຼາດ - Market Overview
+              </h3>
+              <div class="prose max-w-none text-gray-700 leading-relaxed">
+                <div v-html="formatAIText(aiAnalysis.market_overview)"></div>
+              </div>
+            </div>
+
+            <!-- Performance Analysis -->
+            <div class="bg-white rounded-xl p-6 border border-purple-100 shadow-md">
+              <h3 class="text-xl font-bold text-purple-800 mb-4 flex items-center gap-2">
+                📈 ການວິເຄາະການປະຕິບັດງານ - Performance Analysis
+              </h3>
+              <div class="prose max-w-none text-gray-700 leading-relaxed">
+                <div v-html="formatAIText(aiAnalysis.performance_analysis)"></div>
+              </div>
+            </div>
+
+            <!-- Key Insights -->
+            <div class="bg-white rounded-xl p-6 border border-purple-100 shadow-md">
+              <h3 class="text-xl font-bold text-purple-800 mb-4 flex items-center gap-2">
+                💡 ຂໍ້ມູນສຳຄັນ - Key Insights
+              </h3>
+              <div class="prose max-w-none text-gray-700 leading-relaxed">
+                <div v-html="formatAIText(aiAnalysis.key_insights)"></div>
+              </div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="bg-white rounded-xl p-6 border border-purple-100 shadow-md">
+              <h3 class="text-xl font-bold text-purple-800 mb-4 flex items-center gap-2">
+                🎯 ຄຳແນະນຳ - Recommendations
+              </h3>
+              <div class="prose max-w-none text-gray-700 leading-relaxed">
+                <div v-html="formatAIText(aiAnalysis.recommendations)"></div>
+              </div>
+            </div>
+
+            <!-- Risk Analysis -->
+            <div class="bg-white rounded-xl p-6 border border-purple-100 shadow-md">
+              <h3 class="text-xl font-bold text-purple-800 mb-4 flex items-center gap-2">
+                ⚠️ ການວິເຄາະຄວາມສ່ຽງ - Risk Analysis
+              </h3>
+              <div class="prose max-w-none text-gray-700 leading-relaxed">
+                <div v-html="formatAIText(aiAnalysis.risk_analysis)"></div>
+              </div>
+            </div>
+
+            <!-- Future Outlook -->
+            <div class="bg-white rounded-xl p-6 border border-purple-100 shadow-md">
+              <h3 class="text-xl font-bold text-purple-800 mb-4 flex items-center gap-2">
+                🔮 ທັດສະນະອະນາຄົດ - Future Outlook
+              </h3>
+              <div class="prose max-w-none text-gray-700 leading-relaxed">
+                <div v-html="formatAIText(aiAnalysis.future_outlook)"></div>
+              </div>
+            </div>
+
+            <!-- Analysis Timestamp -->
+            <div class="text-center text-sm text-gray-500 bg-purple-50 rounded-lg p-3">
+              ວິເຄາະເມື່ອ: {{ aiAnalysisTimestamp }} | Powered by Google Gemini AI
+            </div>
           </div>
         </div>
+
       </div>
-    </div>
 
-    <!-- Loading State -->
-    <div v-if="loading" class="flex flex-col items-center justify-center py-20 px-5">
-      <div class="w-12 h-12 border-4 border-yellow-200 border-t-yellow-500 rounded-full animate-spin mb-4"></div>
-      <p class="text-gray-600 text-lg">Loading filtered reports...</p>
-      <p class="text-gray-500 text-sm">{{ loadingMessage }}</p>
-    </div>
+      <!-- Floating Refresh Button -->
+      <button @click="fetchAllData" :disabled="loading"
+        class="fixed bottom-8 right-8 w-16 h-16 bg-gradient-to-r from-yellow-500 to-amber-500 text-white rounded-full shadow-xl shadow-yellow-500/30 hover:shadow-2xl hover:scale-110 transition-all duration-300 z-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+        <span v-if="!loading" class="text-2xl">🔄</span>
+        <div v-else class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+      </button>
 
-    <!-- Error State -->
-    <div v-if="error" class="flex flex-col items-center justify-center py-20 px-5 text-center">
-      <div class="bg-red-50 border border-red-200 rounded-xl p-6 max-w-md">
-        <p class="text-red-600 mb-4 font-medium">{{ error }}</p>
-        <button @click="fetchAllData"
-          class="bg-gradient-to-r from-yellow-500 to-amber-500 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-200">
-          🔄 Retry
+
+      <div class="flex justify-end gap-4 mt-6">
+        <button @click="exportToPDF" :disabled="loading || !hasData"
+          class="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+          📄 Export to PDF
+        </button>
+        <button @click="exportToExcel" :disabled="loading || !hasData"
+          class="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+          📊 Export to Excel
         </button>
       </div>
+
     </div>
 
-    <!-- Main Content -->
-    <div v-if="!loading && !error" ref="reportContent" class="p-6 space-y-8 max-w-7xl mx-auto">
 
-      <!-- Summary Stats Bar -->
-      <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
-          <div class="space-y-2">
-            <div class="text-2xl font-bold text-green-800">
-              {{ (transactionStatusSummary?.buyCompleted || 0) + (transactionStatusSummary?.sellCompleted || 0) }}
-            </div>
-            <div class="text-sm text-green-600 font-medium">COMPLETED Transactions</div>
-            <div class="text-xs text-gray-500">
-              Buy: {{ transactionStatusSummary?.buyCompleted || 0 }} |
-              Sell: {{ transactionStatusSummary?.sellCompleted || 0 }}
-            </div>
-          </div>
-          <div class="space-y-2">
-            <div class="text-2xl font-bold text-blue-800">{{ formatCurrency(calculateCompletedAmount(buyTransactions) +
-              calculateTotalAmount(sellTransactions)) }}</div>
-            <div class="text-sm text-blue-600 font-medium">COMPLETED Amount</div>
-            <div class="text-xs text-gray-500">Total completed transaction value</div>
-          </div>
-          <div class="space-y-2">
-            <div class="text-2xl font-bold text-purple-800">{{ formatWeight(calculateCompletedWeight(buyTransactions) +
-              calculateTotalWeight(sellTransactions)) }}g</div>
-            <div class="text-sm text-purple-600 font-medium">COMPLETED Gold Weight</div>
-            <div class="text-xs text-gray-500">Total completed gold processed</div>
-          </div>
-          <div class="space-y-2">
-            <div class="text-2xl font-bold text-amber-800">{{ transactionStatusSummary?.buySuccessRate || 0 }}%</div>
-            <div class="text-sm text-amber-600 font-medium">Buy Success Rate</div>
-            <div class="text-xs text-gray-500">{{ transactionStatusSummary?.buyCompleted || 0 }} completed of {{
-              transactionStatusSummary?.buyTotal || 0 }}</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Overview Summary Cards -->
-      <div class="space-y-6">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <!-- Buy Gold Card -->
+    <!-- Login Modal - Add this after the header div -->
+    <div v-if="showLoginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+        <div class="text-center mb-6">
           <div
-            class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-            <div class="flex items-center justify-between mb-4">
-              <div
-                class="w-12 h-12 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl flex items-center justify-center text-2xl">
-                🪙
-              </div>
-              <div class="text-right">
-                <p class="text-sm text-gray-500 font-medium">Buy Gold (COMPLETED)</p>
-                <p class="text-2xl font-bold text-green-700">{{ countCompleted(buyTransactions) }}</p>
-              </div>
-            </div>
-            <div class="space-y-2">
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">COMPLETED Gold:</span>
-                <span class="text-lg font-bold text-yellow-600">{{
-                  formatWeight(calculateCompletedWeight(buyTransactions)) }}g</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">Transaction Count:</span>
-                <span class="text-lg font-bold text-green-600">{{ countCompleted(buyTransactions) }}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">COMPLETED Amount:</span>
-                <span class="text-sm font-semibold text-yellow-700">{{
-                  formatCurrency(calculateCompletedAmount(buyTransactions)) }}</span>
-              </div>
-            </div>
-            <div class="mt-4 bg-gradient-to-r from-green-50 to-yellow-50 rounded-lg p-3 border border-green-100">
-              <div class="flex justify-between items-center">
-                <span class="text-xs text-green-700">Success Rate:</span>
-                <span class="text-sm font-bold text-green-800">{{ calculateSuccessRate(buyTransactions) }}%</span>
-              </div>
-              <div class="flex justify-between items-center mt-1">
-                <span class="text-xs text-orange-700">Pending:</span>
-                <span class="text-sm font-bold text-orange-800">{{ countPending(buyTransactions) }}</span>
-              </div>
-            </div>
+            class="w-16 h-16 bg-gradient-to-r from-red-500 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
           </div>
-
-          <!-- Sell Gold Card -->
-          <div
-            class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-            <div class="flex items-center justify-between mb-4">
-              <div
-                class="w-12 h-12 bg-gradient-to-r from-red-400 to-red-500 rounded-xl flex items-center justify-center text-2xl">
-                💰
-              </div>
-              <div class="text-right">
-                <p class="text-sm text-gray-500 font-medium">Sell Gold</p>
-                <p class="text-2xl font-bold text-gray-800">{{ sellTransactions.length }}</p>
-              </div>
-            </div>
-            <div class="space-y-1">
-              <p class="text-sm text-gray-600">{{ formatWeight(calculateTotalWeight(sellTransactions)) }}g total</p>
-              <p class="text-sm font-semibold text-red-600">{{ formatCurrency(calculateTotalAmount(sellTransactions)) }}
-              </p>
-            </div>
-            <div class="mt-4 bg-red-50 rounded-lg p-3">
-              <p class="text-xs text-red-700">Average: {{ formatWeight(calculateAverageWeight(sellTransactions)) }}g</p>
-            </div>
-          </div>
-
-          <!-- KYC Card -->
-          <div
-            class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-            <div class="flex items-center justify-between mb-4">
-              <div
-                class="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-500 rounded-xl flex items-center justify-center text-2xl">
-                📋
-              </div>
-              <div class="text-right">
-                <p class="text-sm text-gray-500 font-medium">KYC Applications</p>
-                <p class="text-2xl font-bold text-gray-800">{{ kycDateRangeData.TOTAL_KYC_COUNT || 0 }}</p>
-              </div>
-            </div>
-            <div class="space-y-1">
-              <p class="text-sm text-green-600">{{ kycDateRangeData.APPROVED || 0 }} approved</p>
-              <p class="text-sm text-green-300">{{ kycDateRangeData.PRE_APPROVED || 0 }} pre_approved</p>
-
-              <p class="text-sm font-semibold text-blue-600">{{ kycDateRangeData.PROCESSING || 0 }} processing</p>
-              <p class="text-sm font-semibold text-yellow-600">{{ kycDateRangeData.PENDING || 0 }} pending</p>
-              <p class="text-sm font-semibold text-yellow-400">{{ kycDateRangeData.VERIFY || 0 }} verify</p>
-              <p class="text-sm font-semibold text-blue-400">{{ kycDateRangeData.ADJUST || 0 }} adjust</p>
-              <p class="text-sm font-semibold text-gray-400">{{ kycDateRangeData.NONE || 0 }} none</p>
-
-            </div>
-            <div class="mt-4 bg-red-50 rounded-lg p-3">
-              <p class="text-xs text-red-700 text-bold">{{ kycDateRangeData.REJECTED || 0 }} rejected</p>
-            </div>
-          </div>
-
-          <!-- Top-up Card -->
-          <div
-            class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
-            <div class="flex items-center justify-between mb-4">
-              <div
-                class="w-12 h-12 bg-gradient-to-r from-green-400 to-green-500 rounded-xl flex items-center justify-center text-2xl">
-                💳
-              </div>
-              <div class="text-right">
-                <p class="text-sm text-gray-500 font-medium">Top-ups</p>
-                <p class="text-2xl font-bold text-gray-800">{{ topupDateRangeData.overall?.totalCount || 0 }}</p>
-              </div>
-            </div>
-            <div class="space-y-1">
-              <p class="text-sm text-gray-600">LDB: {{ topupDateRangeData.overall?.ldbCount || 0 }}</p>
-              <p class="text-sm font-semibold text-green-600">PSV: {{ topupDateRangeData.overall?.psvCount || 0 }}</p>
-            </div>
-            <div class="mt-4 bg-green-50 rounded-lg p-3">
-              <p class="text-xs text-green-700">Amount: {{ formatCurrency(topupDateRangeData.overall?.totalAmount) || 0
-              }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Charts Section -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Buy vs Sell Chart -->
-        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
-          <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-            📈 Buy COMPLETED vs Sell Daily Comparison
-          </h3>
-          <div class="h-64">
-            <canvas ref="buyVsSellChart"></canvas>
-          </div>
+          <h2 class="text-2xl font-bold text-gray-800 mb-2">LBB PLUS Access</h2>
+          <p class="text-gray-600">Please login to access the banking report</p>
         </div>
 
-        <!-- Transaction Status Chart -->
-        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
-          <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-            🎯 Transaction Status Distribution
-          </h3>
-          <div class="h-64">
-            <canvas ref="transactionStatusChart"></canvas>
-          </div>
-
-          <!-- Add summary stats below the chart -->
-          <div v-if="transactionStatusSummary" class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div class="bg-green-50 rounded-lg p-3">
-              <div class="text-lg font-bold text-green-800">{{ transactionStatusSummary.buyCompleted }}</div>
-              <div class="text-xs text-green-600">Buy Completed</div>
-            </div>
-            <div class="bg-yellow-50 rounded-lg p-3">
-              <div class="text-lg font-bold text-yellow-800">{{ transactionStatusSummary.buyPending }}</div>
-              <div class="text-xs text-yellow-600">Buy Pending</div>
-            </div>
-            <div class="bg-red-50 rounded-lg p-3">
-              <div class="text-lg font-bold text-red-800">{{ transactionStatusSummary.buyFailed }}</div>
-              <div class="text-xs text-red-600">Buy Failed</div>
-            </div>
-            <div class="bg-purple-50 rounded-lg p-3">
-              <div class="text-lg font-bold text-purple-800">{{ transactionStatusSummary.sellCompleted }}</div>
-              <div class="text-xs text-purple-600">Sell Completed</div>
-            </div>
-          </div>
-
+        <!-- Login Error -->
+        <div v-if="loginError" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <p class="text-red-600 text-sm">{{ loginError }}</p>
         </div>
 
-        <!-- Daily Trends Line Chart -->
-        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100 lg:col-span-2">
-          <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-            📊 Daily Transaction Trends (Buy COMPLETED vs Sell)
-          </h3>
-          <div class="h-80">
-            <canvas ref="dailyTrendsChart"></canvas>
+        <!-- Login Form -->
+        <form @submit.prevent="handleLogin" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <input v-model="loginForm.email" type="email" required
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
+              placeholder="Enter your email" />
           </div>
-        </div>
 
-        <!-- KYC Status Chart -->
-        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
-          <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-            📋 KYC Applications Status
-          </h3>
-          <div class="h-64">
-            <canvas ref="kycStatusChart"></canvas>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+            <input v-model="loginForm.password" type="password" required
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
+              placeholder="Enter your password" />
           </div>
-        </div>
 
-        <!-- Top-up Distribution Chart -->
-        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
-          <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-            💳 Top-up Provider Distribution
-          </h3>
-          <div class="h-64">
-            <canvas ref="topupChart"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- Detailed Analysis Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Buy Gold Analysis -->
-        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
-          <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-            🪙 Buy Gold Analysis
-          </h3>
-          <div class="space-y-4">
-            <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100">
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-green-700 font-medium">COMPLETED Transactions</span>
-                <span class="text-2xl font-bold text-green-800">{{ countCompleted(buyTransactions) }}</span>
-              </div>
+          <button type="submit" :disabled="loginLoading"
+            class="w-full bg-gradient-to-r from-yellow-500 to-amber-500 text-white py-3 px-4 rounded-lg font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+            <div v-if="loginLoading" class="flex items-center justify-center">
+              <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+              Logging in...
             </div>
-            <div class="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-4 border border-yellow-100">
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-yellow-700 font-medium">COMPLETED Gold Weight</span>
-                <span class="text-xl font-bold text-yellow-800">{{
-                  formatWeight(calculateCompletedWeight(buyTransactions)) }}g</span>
-              </div>
-            </div>
-            <div class="bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-4 border border-orange-100">
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-orange-700 font-medium">Pending</span>
-                <span class="text-2xl font-bold text-orange-800">{{ countPending(buyTransactions) }}</span>
-              </div>
-            </div>
-            <div class="space-y-2">
-              <div class="flex justify-between">
-                <span class="text-gray-600">COMPLETED Amount:</span>
-                <span class="font-bold text-green-600">{{ formatCurrency(calculateCompletedAmount(buyTransactions))
-                }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">Success Rate:</span>
-                <span class="font-bold text-green-600">{{ calculateSuccessRate(buyTransactions) }}%</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">Avg COMPLETED Weight:</span>
-                <span class="font-bold text-yellow-600">{{ countCompleted(buyTransactions) > 0 ?
-                  formatWeight(calculateCompletedWeight(buyTransactions) / countCompleted(buyTransactions)) : '0.00'
-                }}g</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">Avg COMPLETED Amount:</span>
-                <span class="font-bold text-green-600">{{ countCompleted(buyTransactions) > 0 ?
-                  formatCurrency(calculateCompletedAmount(buyTransactions) / countCompleted(buyTransactions)) :
-                  formatCurrency(0) }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Sell Gold Analysis -->
-        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
-          <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-            💰 Sell Gold Analysis
-          </h3>
-          <div class="space-y-4">
-            <div class="bg-gradient-to-r from-red-50 to-pink-50 rounded-xl p-4 border border-red-100">
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-red-700 font-medium">Total Transactions</span>
-                <span class="text-2xl font-bold text-red-800">{{ sellTransactions.length }}</span>
-              </div>
-            </div>
-            <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-100">
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-purple-700 font-medium">Total Weight</span>
-                <span class="text-xl font-bold text-purple-800">{{ formatWeight(calculateTotalWeight(sellTransactions))
-                }}g</span>
-              </div>
-            </div>
-            <div class="space-y-2">
-              <div class="flex justify-between">
-                <span class="text-gray-600">Total Amount:</span>
-                <span class="font-bold text-gray-800">{{ formatCurrency(calculateTotalAmount(sellTransactions))
-                }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">Average Amount:</span>
-                <span class="font-bold text-gray-800">{{ formatCurrency(calculateAverageAmount(sellTransactions))
-                }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">Average Weight:</span>
-                <span class="font-bold text-gray-800">{{ formatWeight(calculateAverageWeight(sellTransactions))
-                }}g</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">Transactions/Day:</span>
-                <span class="font-bold text-blue-600">{{ (sellTransactions.length / Math.max(getDateRangeDays(),
-                  1)).toFixed(1) }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Net Position Analysis -->
-        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
-          <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-            ⚖️ Net Position Analysis (COMPLETED)
-          </h3>
-          <div class="space-y-4">
-            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
-              <div class="text-center">
-                <p class="text-sm text-blue-700 font-medium mb-1">Net COMPLETED Amount</p>
-                <p class="text-2xl font-bold" :class="netAmount >= 0 ? 'text-green-800' : 'text-red-800'">
-                  {{ formatCurrency(netAmount) }}
-                </p>
-              </div>
-            </div>
-            <div class="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-xl p-4 border border-teal-100">
-              <div class="text-center">
-                <p class="text-sm text-teal-700 font-medium mb-1">Net COMPLETED Weight</p>
-                <p class="text-2xl font-bold" :class="netWeight >= 0 ? 'text-green-800' : 'text-red-800'">
-                  {{ formatWeight(netWeight) }}g
-                </p>
-              </div>
-            </div>
-            <div class="space-y-2">
-              <div class="flex justify-between">
-                <span class="text-gray-600">Buy COMPLETED Volume:</span>
-                <span class="font-bold text-yellow-600">{{ formatCurrency(calculateCompletedAmount(buyTransactions))
-                }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">Sell Volume:</span>
-                <span class="font-bold text-red-600">{{ formatCurrency(calculateTotalAmount(sellTransactions)) }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">Position Status:</span>
-                <span class="font-bold" :class="netAmount >= 0 ? 'text-green-600' : 'text-red-600'">
-                  {{ netAmount >= 0 ? 'Positive' : 'Negative' }}
-                </span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">COMPLETED Buy Count:</span>
-                <span class="font-bold text-green-600">{{ countCompleted(buyTransactions) }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Recent Transactions -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Recent Sell Transactions -->
-        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
-          <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-            🔄 Recent Sell Transactions
-            <span class="text-sm font-normal text-gray-500">({{ sellTransactions.length }} total)</span>
-          </h3>
-          <div class="space-y-4 max-h-96 overflow-y-auto">
-            <div v-for="transaction in sellTransactions.slice(0, 10)" :key="transaction.TRANSACTION_ID"
-              class="bg-gradient-to-r from-red-50 to-pink-50 rounded-xl p-4 border border-red-100 hover:shadow-md transition-shadow">
-              <div class="flex justify-between items-start">
-                <div class="flex-1">
-                  <p class="text-xs font-mono text-red-600 mb-1">{{ transaction.TRANSACTION_ID }}</p>
-                  <p class="text-sm text-gray-700 mb-1">Customer: <span class="font-medium">{{ transaction.CUSTOMER_ID
-                  }}</span></p>
-                  <p class="text-xs text-gray-500">{{ formatDate(transaction.CREATED_AT) }}</p>
-                </div>
-                <div class="text-right">
-                  <p class="text-lg font-bold text-red-600">{{ formatCurrency(transaction.TOTAL_AMOUNT) }}</p>
-                  <p class="text-sm text-gray-600">{{ formatWeight(transaction.GOLD_WEIGHT) }}g</p>
-                  <div v-if="transaction.FEE_AMOUNT > 0" class="text-xs text-gray-500">
-                    Fee: {{ formatCurrency(transaction.FEE_AMOUNT) }}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div v-if="sellTransactions.length === 0" class="text-center py-8 text-gray-500">
-              No sell transactions found for the selected date range
-            </div>
-          </div>
-        </div>
-
-        <!-- Recent Buy Transactions -->
-        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
-          <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-            🔄 Recent Buy Transactions
-            <span class="text-sm font-normal text-gray-500">({{ buyTransactions.length }} total)</span>
-          </h3>
-          <div class="space-y-4 max-h-96 overflow-y-auto">
-            <div v-for="transaction in buyTransactions.slice(0, 10)" :key="transaction.ID"
-              class="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-4 border border-yellow-100 hover:shadow-md transition-shadow">
-              <div class="flex justify-between items-start">
-                <div class="flex-1">
-                  <p class="text-sm text-yellow-700 font-medium mb-1">ID: {{ transaction.ID }}</p>
-                  <p class="text-sm text-gray-700 mb-1">Customer: <span class="font-medium">{{ transaction.CUSTOMER_ID
-                  }}</span></p>
-                  <div class="flex items-center gap-2 mb-1">
-                    <span class="text-xs text-gray-500">Status:</span>
-                    <span class="px-2 py-1 rounded-full text-xs font-medium" :class="transaction.STATUS && transaction.STATUS.toLowerCase() === 'completed'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-orange-100 text-orange-700'">
-                      {{ transaction.STATUS || 'N/A' }}
-                    </span>
-                  </div>
-                  <p class="text-xs text-gray-500">{{ formatDate(transaction.CREATED_AT) }}</p>
-                </div>
-                <div class="text-right">
-                  <p class="text-lg font-bold text-yellow-600">{{ formatCurrency(transaction.TOTAL_AMOUNT) }}</p>
-                  <p class="text-sm text-gray-600">{{ formatWeight(transaction.GOLD_WEIGHT) }}g</p>
-                  <p class="text-xs text-gray-500">{{ transaction.DR_CURRENCY_CODE || 'LAK' }}</p>
-                </div>
-              </div>
-            </div>
-            <div v-if="buyTransactions.length === 0" class="text-center py-8 text-gray-500">
-              No buy transactions found for the selected date range
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- AI Analytics Section -->
-      <div class="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-2xl p-8 shadow-xl">
-        <div class="text-center mb-8">
-          <h2 class="text-3xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-3">
-            🤖 AI Analytics - ການວິເຄາະດ້ວຍປັນຍາປະດິດ
-          </h2>
-          <p class="text-gray-600">Smart insights and analysis powered by Google Gemini AI</p>
-        </div>
-
-        <!-- AI Analysis Control -->
-        <div class="text-center mb-8">
-          <button @click="generateAIAnalysis" :disabled="aiLoading || !hasData"
-            class="px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-bold text-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 mx-auto">
-            <span v-if="!aiLoading" class="text-2xl">🧠</span>
-            <div v-else class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            {{ aiLoading ? 'ກຳລັງວິເຄາະ...' : 'ສ້າງການວິເຄາະດ້ວຍ AI' }}
+            <span v-else>🔓 Login to Access Report</span>
           </button>
-          <p v-if="!hasData" class="text-sm text-gray-500 mt-2">
-            ຕ້ອງມີຂໍ້ມູນກ່ອນຈຶ່ງສາມາດວິເຄາະໄດ້
+        </form>
+
+        <div class="text-center mt-6">
+          <p class="text-xs text-gray-500">
+            Secure access to LBB Plus Banking Analytics
+            <br>
+            <b>Development by LBB IT Department</b>
           </p>
         </div>
-
-        <!-- AI Error State -->
-        <div v-if="aiError" class="bg-red-50 border border-red-200 rounded-xl p-6 mb-6 text-center">
-          <div class="text-red-600 font-medium mb-2">❌ ຜິດພາດໃນການວິເຄາະ</div>
-          <p class="text-red-500 text-sm">{{ aiError }}</p>
-          <button @click="generateAIAnalysis"
-            class="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-            ລອງໃໝ່
-          </button>
-        </div>
-
-        <!-- AI Analysis Results -->
-        <div v-if="aiAnalysis && !aiLoading" class="space-y-6">
-          <!-- Market Overview -->
-          <div class="bg-white rounded-xl p-6 border border-purple-100 shadow-md">
-            <h3 class="text-xl font-bold text-purple-800 mb-4 flex items-center gap-2">
-              📊 ພາບລວມຕະຫຼາດ - Market Overview
-            </h3>
-            <div class="prose max-w-none text-gray-700 leading-relaxed">
-              <div v-html="formatAIText(aiAnalysis.market_overview)"></div>
-            </div>
-          </div>
-
-          <!-- Performance Analysis -->
-          <div class="bg-white rounded-xl p-6 border border-purple-100 shadow-md">
-            <h3 class="text-xl font-bold text-purple-800 mb-4 flex items-center gap-2">
-              📈 ການວິເຄາະການປະຕິບັດງານ - Performance Analysis
-            </h3>
-            <div class="prose max-w-none text-gray-700 leading-relaxed">
-              <div v-html="formatAIText(aiAnalysis.performance_analysis)"></div>
-            </div>
-          </div>
-
-          <!-- Key Insights -->
-          <div class="bg-white rounded-xl p-6 border border-purple-100 shadow-md">
-            <h3 class="text-xl font-bold text-purple-800 mb-4 flex items-center gap-2">
-              💡 ຂໍ້ມູນສຳຄັນ - Key Insights
-            </h3>
-            <div class="prose max-w-none text-gray-700 leading-relaxed">
-              <div v-html="formatAIText(aiAnalysis.key_insights)"></div>
-            </div>
-          </div>
-
-          <!-- Recommendations -->
-          <div class="bg-white rounded-xl p-6 border border-purple-100 shadow-md">
-            <h3 class="text-xl font-bold text-purple-800 mb-4 flex items-center gap-2">
-              🎯 ຄຳແນະນຳ - Recommendations
-            </h3>
-            <div class="prose max-w-none text-gray-700 leading-relaxed">
-              <div v-html="formatAIText(aiAnalysis.recommendations)"></div>
-            </div>
-          </div>
-
-          <!-- Risk Analysis -->
-          <div class="bg-white rounded-xl p-6 border border-purple-100 shadow-md">
-            <h3 class="text-xl font-bold text-purple-800 mb-4 flex items-center gap-2">
-              ⚠️ ການວິເຄາະຄວາມສ່ຽງ - Risk Analysis
-            </h3>
-            <div class="prose max-w-none text-gray-700 leading-relaxed">
-              <div v-html="formatAIText(aiAnalysis.risk_analysis)"></div>
-            </div>
-          </div>
-
-          <!-- Future Outlook -->
-          <div class="bg-white rounded-xl p-6 border border-purple-100 shadow-md">
-            <h3 class="text-xl font-bold text-purple-800 mb-4 flex items-center gap-2">
-              🔮 ທັດສະນະອະນາຄົດ - Future Outlook
-            </h3>
-            <div class="prose max-w-none text-gray-700 leading-relaxed">
-              <div v-html="formatAIText(aiAnalysis.future_outlook)"></div>
-            </div>
-          </div>
-
-          <!-- Analysis Timestamp -->
-          <div class="text-center text-sm text-gray-500 bg-purple-50 rounded-lg p-3">
-            ວິເຄາະເມື່ອ: {{ aiAnalysisTimestamp }} | Powered by Google Gemini AI
-          </div>
-        </div>
       </div>
-
     </div>
 
-    <!-- Floating Refresh Button -->
-    <button @click="fetchAllData" :disabled="loading"
-      class="fixed bottom-8 right-8 w-16 h-16 bg-gradient-to-r from-yellow-500 to-amber-500 text-white rounded-full shadow-xl shadow-yellow-500/30 hover:shadow-2xl hover:scale-110 transition-all duration-300 z-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
-      <span v-if="!loading" class="text-2xl">🔄</span>
-      <div v-else class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-    </button>
 
-
-    <div class="flex justify-end gap-4 mt-6">
-      <button @click="exportToPDF" :disabled="loading || !hasData"
-        class="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-        📄 Export to PDF
-      </button>
-      <button @click="exportToExcel" :disabled="loading || !hasData"
-        class="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-        📊 Export to Excel
-      </button>
-    </div>
 
   </div>
 </template>
 
+
 <script>
+
+definePageMeta({
+  layout: 'empty',
+});
+
 import { ref, onMounted, nextTick, computed } from 'vue'
 
 import jsPDF from 'jspdf'
@@ -700,8 +824,21 @@ export default {
     const kycDateRangeData = ref({})
     const topupDateRangeData = ref({})
     const transactionStatusData = ref({})
+    const appDownloads = ref({}) // New state for app downloads
 
-    const baseURL = 'http://172.16.0.46:3000/api'
+
+    const isLoggedIn = ref(false)
+    const showLoginModal = ref(false)
+    const loginLoading = ref(false)
+    const loginError = ref('')
+    const authToken = ref('')
+    const loginForm = ref({
+      email: '', // Pre-filled
+      password: ''
+    })
+
+    const baseURL = 'http://202.62.106.154:5173/api'
+    const appDownloadsURL = 'http://202.62.106.154:5173/apis/downloads/lbbplus' // New API URL for app downloads
 
     // Gemini API Configuration
     const GEMINI_API_KEY = 'AIzaSyAaAY5zRiBbiNFQ3v3ipUyWc5-py96qwjo' // Replace with your actual API key
@@ -712,14 +849,17 @@ export default {
       {
         label: 'Today',
         getDates: () => {
+          // สำหรับ "วันนี้" เราต้องสร้างวันพรุ่งนี้เป็น endDate
           const today = new Date().toISOString().split('T')[0]
-          return { startDate: today, endDate: today }
+          const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+          return { startDate: today, endDate: tomorrow }
         }
       },
       {
         label: 'Last 7 Days',
         getDates: () => {
-          const endDate = new Date().toISOString().split('T')[0]
+          // เพิ่ม 1 วันให้กับ endDate
+          const endDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
           const startDate = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
           return { startDate, endDate }
         }
@@ -727,7 +867,8 @@ export default {
       {
         label: 'Last 30 Days',
         getDates: () => {
-          const endDate = new Date().toISOString().split('T')[0]
+          // เพิ่ม 1 วันให้กับ endDate
+          const endDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
           const startDate = new Date(Date.now() - 29 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
           return { startDate, endDate }
         }
@@ -737,8 +878,9 @@ export default {
         getDates: () => {
           const now = new Date()
           const startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
-          const endDate = new Date().toISOString().split('T')[0]
-          return { startDate, endDate }
+          // เพิ่ม 1 วันให้กับ endDate
+          const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+          return { startDate, endDate: tomorrow }
         }
       },
       {
@@ -746,14 +888,16 @@ export default {
         getDates: () => {
           const now = new Date()
           const startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0]
-          const endDate = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0]
+          // สำหรับเดือนที่แล้ว เราใช้วันที่ 1 ของเดือนนี้เป็น endDate
+          const endDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
           return { startDate, endDate }
         }
       },
       {
         label: 'Last 3 Months',
         getDates: () => {
-          const endDate = new Date().toISOString().split('T')[0]
+          // เพิ่ม 1 วันให้กับ endDate
+          const endDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
           const startDate = new Date(Date.now() - 89 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
           return { startDate, endDate }
         }
@@ -783,6 +927,83 @@ export default {
       return Math.round(((kycDateRangeData.value.APPROVED || 0) / total) * 100)
     })
 
+    // Login API call
+    const handleLogin = async () => {
+      loginLoading.value = true
+      loginError.value = ''
+
+      try {
+        const response = await fetch('http://202.62.106.154:5173/apis/users/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email: loginForm.value.email,
+            password: loginForm.value.password
+          })
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Invalid credentials')
+        }
+
+        // Store auth data
+        authToken.value = data.token
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('lbb_auth_token', data.token)
+          localStorage.setItem('lbb_user', JSON.stringify(data.user))
+          localStorage.setItem('lbb_login_completed', 'true') // One-time flag
+        }
+
+        // Update login state
+        isLoggedIn.value = true
+        showLoginModal.value = false
+
+        // Load report data
+        fetchAllData()
+
+      } catch (err) {
+        loginError.value = err.message || 'Login failed'
+        console.error('Login error:', err)
+      } finally {
+        loginLoading.value = false
+      }
+    }
+
+    // Check if already logged in (one-time check)
+    const checkAuthStatus = () => {
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('lbb_auth_token')
+        const loginCompleted = localStorage.getItem('lbb_login_completed')
+
+        if (token && loginCompleted) {
+          authToken.value = token
+          isLoggedIn.value = true
+        } else {
+          showLoginModal.value = true
+        }
+      }
+    }
+
+    // New function to fetch app download statistics
+    const fetchAppDownloads = async () => {
+      try {
+        loadingMessage.value = 'Loading app download statistics...'
+        const response = await fetch(appDownloadsURL)
+        const data = await response.json()
+        if (data && data.length > 0) {
+          appDownloads.value = data[0] || {}
+          console.log('✅ App download data loaded:', appDownloads.value)
+        }
+      } catch (err) {
+        console.error('Error fetching app download statistics:', err)
+        appDownloads.value = { ios: 0, android: 0, update_date: new Date().toISOString() }
+      }
+    }
+
     // Add this method with your other fetch methods
     const fetchTransactionStatusDistribution = async () => {
       try {
@@ -800,28 +1021,28 @@ export default {
     }
 
     const transactionStatusSummary = computed(() => {
-  if (!transactionStatusData.value || !transactionStatusData.value.totalTransactions) {
-    return {
-      buyCompleted: 0,
-      buyPending: 0,
-      buyFailed: 0,
-      sellCompleted: 0,
-      buyTotal: 0,
-      totalTransactions: 0,
-      buySuccessRate: 0
-    }
-  }
-  
-  return {
-    buyCompleted: transactionStatusData.value.buyCompleted || 0,
-    buyPending: transactionStatusData.value.buyPending || 0,
-    buyFailed: transactionStatusData.value.buyFailed || 0,
-    sellCompleted: transactionStatusData.value.sellCompleted || 0,
-    buyTotal: transactionStatusData.value.buyTotal || 0,
-    totalTransactions: transactionStatusData.value.totalTransactions || 0,
-    buySuccessRate: transactionStatusData.value.buySuccessRate || 0
-  }
-})
+      if (!transactionStatusData.value || !transactionStatusData.value.totalTransactions) {
+        return {
+          buyCompleted: 0,
+          buyPending: 0,
+          buyFailed: 0,
+          sellCompleted: 0,
+          buyTotal: 0,
+          totalTransactions: 0,
+          buySuccessRate: 0
+        }
+      }
+
+      return {
+        buyCompleted: transactionStatusData.value.buyCompleted || 0,
+        buyPending: transactionStatusData.value.buyPending || 0,
+        buyFailed: transactionStatusData.value.buyFailed || 0,
+        sellCompleted: transactionStatusData.value.sellCompleted || 0,
+        buyTotal: transactionStatusData.value.buyTotal || 0,
+        totalTransactions: transactionStatusData.value.totalTransactions || 0,
+        buySuccessRate: transactionStatusData.value.buySuccessRate || 0
+      }
+    })
 
     const exportToPDF = async () => {
       if (!reportContent.value) return
@@ -890,12 +1111,14 @@ export default {
         ['KYC Approval Rate', formatNumber(kycApprovalRate.value, 'percent')],
         ['Net Amount', formatNumber(netAmount.value, 'currency')],
         ['Net Weight', formatNumber(netWeight.value, 'weight')],
+        ['App Downloads (iOS)', appDownloads.value.ios || 0],
+        ['App Downloads (Android)', appDownloads.value.android || 0],
         []
       ]
       const summarySheet = XLSX.utils.aoa_to_sheet(summaryData)
       summarySheet['!cols'] = [{ wch: 30 }, { wch: 20 }]
       summarySheet['A1'] = { v: 'LBB Plus Banking Report Summary', t: 's', s: { font: { bold: true, sz: 14 } } }
-      for (let i = 2; i <= 8; i++) {
+      for (let i = 2; i <= 10; i++) {
         summarySheet[`A${i}`] = { v: summaryData[i - 1][0], t: 's', s: { font: { bold: true } } }
       }
       XLSX.utils.book_append_sheet(wb, summarySheet, 'Summary')
@@ -972,6 +1195,22 @@ export default {
         topupSheet[`A${i}`] = { v: topupData[i - 1][0], t: 's', s: { font: { bold: true } } }
       }
       XLSX.utils.book_append_sheet(wb, topupSheet, 'Top-ups')
+
+      // Sheet 6: App Downloads
+      const appDownloadsData = [
+        ['App Downloads Statistics', null],
+        ['iOS Downloads', appDownloads.value.ios || 0],
+        ['Android Downloads', appDownloads.value.android || 0],
+        ['Total Downloads', (appDownloads.value.ios || 0) + (appDownloads.value.android || 0)],
+        ['Last Updated', formatDatetime(appDownloads.value.update_date)]
+      ]
+      const appDownloadsSheet = XLSX.utils.aoa_to_sheet(appDownloadsData)
+      appDownloadsSheet['!cols'] = [{ wch: 25 }, { wch: 25 }]
+      appDownloadsSheet['A1'] = { v: 'App Downloads Statistics', t: 's', s: { font: { bold: true, sz: 14 } } }
+      for (let i = 2; i <= 5; i++) {
+        appDownloadsSheet[`A${i}`] = { v: appDownloadsData[i - 1][0], t: 's', s: { font: { bold: true } } }
+      }
+      XLSX.utils.book_append_sheet(wb, appDownloadsSheet, 'App Downloads')
 
       // Download
       XLSX.writeFile(wb, `LBB_Plus_Report_${startDate.value}_to_${endDate.value}.xlsx`)
@@ -1075,6 +1314,12 @@ export default {
           psv: topupDateRangeData.value.overall?.psvCount || 0,
           totalAmount: topupDateRangeData.value.overall?.totalAmount || 0
         },
+        appDownloads: {
+          ios: appDownloads.value.ios || 0,
+          android: appDownloads.value.android || 0,
+          total: (appDownloads.value.ios || 0) + (appDownloads.value.android || 0),
+          lastUpdated: formatDatetime(appDownloads.value.update_date)
+        },
         netPosition: {
           amount: netAmount.value,
           weight: netWeight.value
@@ -1115,7 +1360,13 @@ export default {
 - ທັງໝົດ: ${data.topup.total}
 - LDB: ${data.topup.ldb}
 - PSV: ${data.topup.psv}
-- ມູນຄ່າທັງໝົດ: ${data.topup.totalAmount} ກີບ and plz format number example to 100,000
+- ມູນຄ່າທັງໝົດ: ${formatCurrency(data.topup.totalAmount)}
+
+**ດາວໂຫລດແອັບ:**
+- iOS: ${formatNumber(data.appDownloads.ios)}
+- Android: ${formatNumber(data.appDownloads.android)}
+- ລວມທັງໝົດ: ${formatNumber(data.appDownloads.total)}
+- ອັບເດດລ່າສຸດ: ${data.appDownloads.lastUpdated}
 
 **ສະຖານະສຸດທິ:**
 - ມູນຄ່າສຸດທິ: ${formatCurrency(data.netPosition.amount)}
@@ -1254,6 +1505,24 @@ export default {
       })
     }
 
+    // Format datetime for display
+    const formatDatetime = (dateStr) => {
+      if (!dateStr) return 'N/A'
+      return new Date(dateStr).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }
+
+    // Format number with thousands separator
+    const formatNumber = (num) => {
+      if (!num && num !== 0) return '0'
+      return new Intl.NumberFormat('en-US').format(num)
+    }
+
     // Load Chart.js
     const loadChart = async () => {
       if (typeof window !== 'undefined' && !window.Chart) {
@@ -1320,7 +1589,9 @@ export default {
     const fetchBuyTransactions = async () => {
       try {
         loadingMessage.value = 'Loading buy transactions...'
-        const response = await fetch(`${baseURL}/gold/transactions?startDate=${startDate.value}&endDate=${endDate.value}`)
+        const response = await fetch(`${baseURL}/gold/transactions?startDate=${startDate.value}&endDate=${endDate.value}`, {
+          // headers: getAuthHeaders()
+        })
         const data = await response.json()
         if (data.success) {
           buyTransactions.value = data.data || []
@@ -1388,7 +1659,8 @@ export default {
           fetchSellTransactions(),
           fetchKYCDateRange(),
           fetchTopupDateRange(),
-          fetchTransactionStatusDistribution() // ADD THIS LINE
+          fetchTransactionStatusDistribution(),
+          fetchAppDownloads() // Added app downloads fetch
         ])
 
         // Initialize charts after data is loaded
@@ -1610,47 +1882,49 @@ export default {
       }
 
       // KYC Status Chart
-      if (kycStatusChart.value && kycDateRangeData.value.TOTAL) {
+      if (kycStatusChart.value) {
         const ctx = kycStatusChart.value.getContext('2d')
         if (kycStatusChartInstance) {
           kycStatusChartInstance.destroy()
         }
 
+        // Log the KYC data to debug
+        console.log('KYC Data for chart:', kycDateRangeData.value)
+
+        // Fix: Don't make chart initialization dependent on TOTAL property
+        // Create an array of KYC statuses and their counts
+        const kycData = [
+          { label: 'Approved', value: kycDateRangeData.value.APPROVED || 0, color: 'rgba(34, 197, 94, 0.8)', border: 'rgb(34, 197, 94)' },
+          { label: 'Processing', value: kycDateRangeData.value.PROCESSING || 0, color: 'rgba(251, 191, 36, 0.8)', border: 'rgb(251, 191, 36)' },
+          { label: 'Pending', value: kycDateRangeData.value.PENDING || 0, color: 'rgba(251, 191, 36, 0.2)', border: 'rgb(251, 191, 36)' },
+          { label: 'Pre-approved', value: kycDateRangeData.value.PRE_APPROVED || 0, color: 'rgba(59, 130, 246, 0.8)', border: 'rgb(59, 130, 246)' },
+          { label: 'Rejected', value: kycDateRangeData.value.REJECTED || 0, color: 'rgba(239, 68, 68, 0.8)', border: 'rgb(239, 68, 68)' },
+          { label: 'Verify', value: kycDateRangeData.value.VERIFY || 0, color: 'rgba(239, 68, 68, 0.2)', border: 'rgb(239, 68, 68)' },
+          { label: 'Adjust', value: kycDateRangeData.value.ADJUST || 0, color: 'rgba(239, 68, 68, 0.2)', border: 'rgb(239, 68, 68)' },
+          { label: 'None', value: kycDateRangeData.value.NONE || 0, color: 'rgba(156, 163, 175, 0.8)', border: 'rgb(156, 163, 175)' }
+        ]
+
+        // Filter out statuses with zero values if needed
+        const filteredData = kycData.filter(item => item.value > 0)
+
+        // If no data after filtering, add a placeholder
+        if (filteredData.length === 0) {
+          filteredData.push({
+            label: 'No Data',
+            value: 1,
+            color: 'rgba(209, 213, 219, 0.8)',
+            border: 'rgb(209, 213, 219)'
+          })
+        }
+
         kycStatusChartInstance = new window.Chart(ctx, {
           type: 'doughnut',
           data: {
-            labels: ['Approved', 'Processing', 'Pending', 'Pre-approved', 'Rejected', 'Verify', 'Adjust', 'None'],
+            labels: filteredData.map(item => item.label),
             datasets: [{
-              data: [
-                kycDateRangeData.value.APPROVED || 0,
-                kycDateRangeData.value.PROCESSING || 0,
-                kycDateRangeData.value.PENDING || 0,
-                kycDateRangeData.value.PRE_APPROVED || 0,
-                kycDateRangeData.value.REJECTED || 0,
-                kycDateRangeData.value.VERIFY || 0,
-                kycDateRangeData.value.ADJUST || 0,
-                kycDateRangeData.value.NONE || 0
-              ],
-              backgroundColor: [
-                'rgba(34, 197, 94, 0.8)',
-                'rgba(251, 191, 36, 0.8)',
-                'rgba(251, 191, 36, 0.2)',
-                'rgba(59, 130, 246, 0.8)',
-                'rgba(239, 68, 68, 0.8)',
-                'rgba(239, 68, 68, 0.2)',
-                'rgba(239, 68, 68, 0.2)',
-                'rgba(239, 68, 68, 0.2)'
-              ],
-              borderColor: [
-                'rgb(34, 197, 94)',
-                'rgb(251, 191, 36)',
-                'rgb(251, 191, 36)',
-                'rgb(59, 130, 246)',
-                'rgb(239, 68, 68)',
-                'rgb(239, 68, 68)',
-                'rgb(239, 68, 68)',
-                'rgb(239, 68, 68)'
-              ],
+              data: filteredData.map(item => item.value),
+              backgroundColor: filteredData.map(item => item.color),
+              borderColor: filteredData.map(item => item.border),
               borderWidth: 2
             }]
           },
@@ -1660,6 +1934,17 @@ export default {
             plugins: {
               legend: {
                 position: 'bottom',
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    const label = context.label || '';
+                    const value = context.parsed;
+                    const total = filteredData.reduce((sum, item) => sum + item.value, 0);
+                    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                    return `${label}: ${value} (${percentage}%)`;
+                  }
+                }
               }
             }
           }
@@ -1739,8 +2024,13 @@ export default {
     }
 
     onMounted(() => {
+      checkAuthStatus() // Check login first
       initializeDateRange()
-      fetchAllData()
+
+      // Only load data if already logged in
+      if (isLoggedIn.value) {
+        fetchAllData()
+      }
     })
 
     return {
@@ -1769,11 +2059,14 @@ export default {
       aiError,
       aiAnalysis,
       aiAnalysisTimestamp,
+      appDownloads, // New state for app downloads
       setDatePreset,
       onDateChange,
       applyDateFilter,
       getDateRangeDays,
       formatDateDisplay,
+      formatDatetime, // Format datetime for display
+      formatNumber, // Format number with thousands separator
       fetchAllData,
       generateAIAnalysis,
       formatAIText,
@@ -1799,8 +2092,14 @@ export default {
       exportToExcel,
       transactionStatusData,
       fetchTransactionStatusDistribution,
-        transactionStatusSummary, // ADD THIS LINE
-
+      transactionStatusSummary,
+      isLoggedIn,
+      showLoginModal,
+      loginLoading,
+      loginError,
+      loginForm,
+      handleLogin,
+      checkAuthStatus
     }
   }
 }

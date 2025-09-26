@@ -546,7 +546,7 @@
                   </div>
                   <div>
                     <p class="font-semibold text-gray-900">{{ account.acct_no }}</p>
-                    <p class="text-sm text-gray-600">{{ account.ccy }} • {{ account.deposit_type === 'C' ? 'Current' : 'Term' }}</p>
+                    <p class="text-sm text-gray-600">{{ account.ccy }} • {{ account.deposit_type === 'C' ? 'Current' : 'Term' }} | {{ getAccountTypeName(account.acct_type) }}</p>
                   </div>
                 </div>
                 <div class="text-right">
@@ -701,6 +701,27 @@ const searchTabs = [
   { id: 'comparison', name: 'Mobile/Core Comparison', icon: ComparisonIcon }
 ];
 
+
+// Account type mapping
+const accountTypeMapping = {
+  '101': 'Current Account',
+  '102': 'Gold Savings Account',
+  '103': 'Internal acct for gold selling',
+  '104': 'Current - LAK',
+  '105': 'Current - Gold',
+  '106': 'Internal acct for Gold Trading',
+  '199': 'ZZ CURRENT ACCOUNT',
+  '201': 'TD6',
+  '202': 'TD12',
+  '203': 'Move New Deposit More You Get',
+  '204': 'DEPOSIT FOR LOAN GRANTEE',
+  '205': 'TD6',
+  '206': 'TD12'
+};
+const getAccountTypeName = (acctType) => {
+  return accountTypeMapping[acctType] || acctType;
+};
+
 // API configuration
 const apiBaseUrl = 'http://172.16.0.46:3000';
 
@@ -721,6 +742,7 @@ const isValidSearch = computed(() => {
       return false;
   }
 });
+
 
 const getClientInfo = computed(() => {
   if (!clientData.value) return null;
