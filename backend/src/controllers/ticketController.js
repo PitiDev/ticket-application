@@ -320,13 +320,37 @@ exports.createTicket = async (req, res) => {
             console.error('Failed to send notification email:', emailError);
         }
 
-        // Emit socket event if socket.io is available
-        try {
-            // const { io } = require('../socket');
-            // io.emit('ticketCreated', ticket[0]);
-        } catch (socketError) {
-            // Log but don't fail if socket emission fails
-            console.error('Failed to emit socket event:', socketError);
+        // Emit socket event and create notification if ticket is assigned
+        if (assigned_to) {
+            try {
+                const notificationController = require('./notificationController');
+                const { getIO } = require('../socket');
+
+                // Create notification for the assignee
+                const notification = await notificationController.createNotification({
+                    userId: assigned_to,
+                    ticketId: result.insertId,
+                    type: 'ticket_assigned',
+                    title: 'New Ticket Assigned',
+                    message: `You have been assigned to ticket ${ticketNumber}: ${title}`,
+                    metadata: {
+                        ticket_number: ticketNumber,
+                        priority: priority_id,
+                        assigned_by: creatorName
+                    }
+                });
+
+                // Emit realtime notification via Socket.IO
+                const io = getIO();
+                io.to(`user-${assigned_to}`).emit('notification', notification);
+                io.to(`user-${assigned_to}`).emit('ticketAssigned', {
+                    ticketId: result.insertId,
+                    ticket: ticket[0]
+                });
+
+            } catch (socketError) {
+                console.error('Failed to emit socket event or create notification:', socketError);
+            }
         }
 
         res.status(201).json(ticket[0]);
@@ -506,12 +530,44 @@ exports.updateTicket = async (req, res) => {
             console.error('Failed to send notification email:', emailError);
         }
 
-        // Emit socket event if socket.io is available
+        // Emit socket event and create notification for assignment changes
+        if (newAssignedUser) {
+            try {
+                const notificationController = require('./notificationController');
+                const { getIO } = require('../socket');
+
+                // Create notification for the newly assigned user
+                const notification = await notificationController.createNotification({
+                    userId: newAssignedUser.id,
+                    ticketId: id,
+                    type: 'ticket_assigned',
+                    title: 'Ticket Assigned to You',
+                    message: `You have been assigned to ticket ${oldTicket[0].ticket_number}: ${updates.title || oldTicket[0].title}`,
+                    metadata: {
+                        ticket_number: oldTicket[0].ticket_number,
+                        assigned_by: updaterName
+                    }
+                });
+
+                // Emit realtime notification via Socket.IO
+                const io = getIO();
+                io.to(`user-${newAssignedUser.id}`).emit('notification', notification);
+                io.to(`user-${newAssignedUser.id}`).emit('ticketAssigned', {
+                    ticketId: id,
+                    ticket: ticket[0]
+                });
+
+            } catch (socketError) {
+                console.error('Failed to emit socket event or create notification:', socketError);
+            }
+        }
+
+        // Emit ticket update event
         try {
-            // const { io } = require('../socket');
-            // io.emit('ticketUpdated', ticket[0]);
+            const { getIO } = require('../socket');
+            const io = getIO();
+            io.emit('ticketUpdated', ticket[0]);
         } catch (socketError) {
-            // Log but don't fail if socket emission fails
             console.error('Failed to emit socket event:', socketError);
         }
 
@@ -897,12 +953,35 @@ exports.assignTicket = async (req, res) => {
             // Continue despite email failure
         }
 
-        // Send real-time notification
-        // io.emit('ticketAssigned', {
-        //     ticketId,
-        //     assignedTo: userId,
-        //     assignedBy
-        // });
+        // Send real-time notification via Socket.IO
+        try {
+            const notificationController = require('./notificationController');
+            const { getIO } = require('../socket');
+
+            // Create notification for the assignee
+            const notification = await notificationController.createNotification({
+                userId: userId,
+                ticketId: ticketId,
+                type: 'ticket_assigned',
+                title: 'Ticket Assigned to You',
+                message: `You have been assigned to ticket ${ticket.ticket_number}: ${ticket.title}`,
+                metadata: {
+                    ticket_number: ticket.ticket_number,
+                    assigned_by: assignerName
+                }
+            });
+
+            // Emit realtime notification
+            const io = getIO();
+            io.to(`user-${userId}`).emit('notification', notification);
+            io.to(`user-${userId}`).emit('ticketAssigned', {
+                ticketId,
+                ticket
+            });
+
+        } catch (socketError) {
+            console.error('Failed to emit socket event or create notification:', socketError);
+        }
 
         res.json({ message: 'Ticket assigned successfully' });
     } catch (error) {

@@ -69,14 +69,7 @@
           <!-- Right Side - User Menu -->
           <div class="flex items-center">
             <!-- Notification Bell -->
-            <button class="p-2 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none">
-              <span class="sr-only">View notifications</span>
-              <BellIcon class="h-6 w-6" />
-              <span v-if="notificationCount > 0"
-                class="absolute top-3 right-48 bg-red-500 rounded-full h-5 w-5 flex items-center justify-center text-white text-xs font-medium">
-                {{ notificationCount > 9 ? '9+' : notificationCount }}
-              </span>
-            </button>
+            <NotificationDropdown ref="notificationDropdown" />
 
             <!-- User Menu Dropdown -->
             <Menu as="div" class="ml-3 relative">
@@ -177,9 +170,9 @@ import {
   MenuItems
 } from '@headlessui/vue'
 import {
-  BellIcon,
   ChevronDownIcon
 } from '@heroicons/vue/24/outline'
+import NotificationDropdown from '~/components/NotificationDropdown.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -188,8 +181,8 @@ const config = useRuntimeConfig()
 // App configuration
 const appName = ref('Ticket Support System') // ค่าเริ่มต้น
 const logoUrl = ref(null) // URL ของโลโก้
-const notificationCount = ref(0) // จำนวนการแจ้งเตือนที่ยังไม่ได้อ่าน
 const apiBaseUrl = 'http://172.16.4.62:9000/api' // Base URL ของ API
+const notificationDropdown = ref(null)
 
 // Function to check if a route is active (exact or starts with)
 const isActiveRoute = (path) => {

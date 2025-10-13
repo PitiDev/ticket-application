@@ -1,17 +1,21 @@
 # Ticket Management System
 
-A comprehensive ticket management system built with Nuxt 3, Node.js, and MySQL/MariaDB featuring real-time notifications, email alerts, and a modern UI.
+A comprehensive ticket management system built with Nuxt 3, Node.js, and MySQL/MariaDB featuring real-time notifications, email alerts, and a modern UI with advanced analytics and reporting capabilities.
 
 ## Features
 
 - **Ticket Management**: Create, view, update, and delete support tickets
 - **User Management**: Role-based access control (admin, manager, agent, user)
 - **Department & Category Organization**: Organize tickets by department and category
-- **Real-time Updates**: Instant notifications via Socket.IO when tickets change
+- **Real-time Notifications**: Instant notifications via Socket.IO when tickets are assigned
+- **Notification Center**: Dedicated page to view, filter, and manage all notifications
 - **Email Notifications**: Automated emails for ticket assignments and updates
-- **Dashboard**: Visualize ticket statistics and analytics
-- **Mobile Responsive**: Modern UI that works across devices
+- **Advanced Dashboard**: Interactive charts and analytics with Chart.js and ApexCharts
+- **Data Visualization**: Financial charts and trading views integration
+- **Export Capabilities**: PDF generation with jsPDF and Excel export with xlsx
+- **Mobile Responsive**: Modern UI that works across devices with Tailwind CSS
 - **History Tracking**: Complete audit trail of all ticket changes
+- **AI Integration**: Google Generative AI integration for enhanced features
 
 ## Tech Stack
 
@@ -24,9 +28,18 @@ A comprehensive ticket management system built with Nuxt 3, Node.js, and MySQL/M
 
 ### Frontend
 - **Nuxt 3**: Vue.js framework
-- **Tailwind CSS**: Styling
-- **Pinia**: State management
+- **Tailwind CSS**: Utility-first CSS framework for styling
+- **Pinia**: State management for Vue.js
 - **Socket.IO Client**: Real-time updates
+- **Chart.js**: Interactive charts and data visualization
+- **ApexCharts**: Advanced charting library
+- **TradingView**: Financial charts integration
+- **jsPDF**: PDF generation
+- **xlsx**: Excel file handling
+- **Vue Toastification**: Toast notifications
+- **Headless UI**: Unstyled UI components
+- **Heroicons**: Icon library
+- **Google Generative AI**: AI-powered features
 
 ## Installation
 
@@ -40,7 +53,7 @@ A comprehensive ticket management system built with Nuxt 3, Node.js, and MySQL/M
 1. Clone the repository
    ```bash
    git clone <repository-url>
-   cd ticket-system/backend
+   cd ticket-application/backend
    ```
 
 2. Install dependencies
@@ -78,8 +91,10 @@ A comprehensive ticket management system built with Nuxt 3, Node.js, and MySQL/M
 
 5. Start the server
    ```bash
-   npm run dev
+   npm start
    ```
+
+   Note: Check the package.json file for available scripts.
 
 ### Frontend Setup
 
@@ -98,12 +113,14 @@ A comprehensive ticket management system built with Nuxt 3, Node.js, and MySQL/M
    NUXT_PUBLIC_API_BASE=http://localhost:3000/api
    ```
 
+   Note: Adjust the API base URL according to your backend configuration.
+
 4. Start the development server
    ```bash
    npm run dev
    ```
 
-5. Access the application at `http://localhost:3001`
+5. Access the application at `http://localhost:3000` (or the port specified in your Nuxt configuration)
 
 ## Database Schema
 
@@ -134,6 +151,13 @@ The system uses the following main tables:
 - `GET /api/tickets/:id/comments`: Get comments
 - `GET /api/tickets/:id/history`: Get ticket history
 - `POST /api/tickets/:ticketId/assign`: Assign ticket
+
+### Notifications
+- `GET /api/notifications`: Get user notifications
+- `GET /api/notifications/unread-count`: Get unread notification count
+- `PUT /api/notifications/:id/read`: Mark notification as read
+- `PUT /api/notifications/mark-all-read`: Mark all notifications as read
+- `DELETE /api/notifications/:id`: Delete notification
 
 ### Dashboard
 - `GET /api/dashboard`: Get dashboard statistics
@@ -170,13 +194,55 @@ mysqldump -u your_username -p your_database > backup.sql
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
+## Project Structure
+
+```
+ticket-application/
+├── backend/                 # Node.js/Express API server
+│   ├── .env                # Environment configuration
+│   ├── package.json        # Backend dependencies
+│   └── ...                 # Backend source files
+├── frontend/               # Nuxt 3 application
+│   ├── pages/              # Vue.js pages
+│   ├── components/         # Reusable Vue components
+│   ├── composables/        # Vue composables
+│   ├── assets/             # Static assets
+│   ├── package.json        # Frontend dependencies
+│   └── ...                 # Frontend source files
+├── README.md              # Project documentation
+└── .gitignore             # Git ignore rules
+```
+
+## Development Commands
+
+### Backend
+```bash
+cd backend
+npm install          # Install dependencies
+npm start           # Start production server
+npm run dev         # Start development server (if available)
+```
+
+### Frontend
+```bash
+cd frontend
+npm install          # Install dependencies
+npm run dev         # Start development server
+npm run build       # Build for production
+npm run generate    # Generate static site
+npm run preview     # Preview production build
+```
+
 ## Contributors
 
 - [Piti Phanthasombath] - Initial work - [https://github.com/PitiDev]
 
 ## Acknowledgments
 
-- [Nuxt.js](https://nuxt.com/)
-- [Express.js](https://expressjs.com/)
-- [Socket.IO](https://socket.io/)
-- [Tailwind CSS](https://tailwindcss.com/)
+- [Nuxt.js](https://nuxt.com/) - The Intuitive Vue Framework
+- [Express.js](https://expressjs.com/) - Fast, unopinionated web framework
+- [Socket.IO](https://socket.io/) - Bidirectional and low-latency communication
+- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
+- [Chart.js](https://www.chartjs.org/) - Simple yet flexible JavaScript charting
+- [ApexCharts](https://apexcharts.com/) - Modern charting library
+- [Google AI](https://ai.google.dev/) - Generative AI capabilities
