@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
     <!-- Top Navigation Bar -->
-    <nav class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
+    <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm sticky top-0 z-10 transition-colors duration-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
           <!-- Left side - Logo and Brand -->
@@ -16,7 +16,7 @@
               </div>
               <!-- เปลี่ยนสีเป็นทองคำ (Golden) -->
               <span
-                class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-yellow-400 gold-shimmer">{{
+                class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-yellow-400 dark:from-amber-400 dark:to-yellow-300 gold-shimmer">{{
                   appName }}</span>
             </NuxtLink>
 
@@ -24,19 +24,19 @@
             <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
               <!-- Menus for all users -->
               <NuxtLink to="/"
-                class="border-transparent text-gray-500 hover:border-amber-300 hover:text-amber-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200"
-                :class="isActiveRoute('/') ? 'border-amber-500 text-amber-600 font-semibold' : ''">
+                class="border-transparent text-gray-500 dark:text-gray-300 hover:border-amber-300 hover:text-amber-700 dark:hover:text-amber-400 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200"
+                :class="isActiveRoute('/') ? 'border-amber-500 text-amber-600 dark:text-amber-400 font-semibold' : ''">
                 Dashboard
               </NuxtLink>
               <NuxtLink to="/tickets"
-                class="border-transparent text-gray-500 hover:border-amber-300 hover:text-amber-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200"
-                :class="isActiveRoute('/tickets') ? 'border-amber-500 text-amber-600 font-semibold' : ''">
+                class="border-transparent text-gray-500 dark:text-gray-300 hover:border-amber-300 hover:text-amber-700 dark:hover:text-amber-400 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200"
+                :class="isActiveRoute('/tickets') ? 'border-amber-500 text-amber-600 dark:text-amber-400 font-semibold' : ''">
                 Tickets
               </NuxtLink>
 
               <NuxtLink to="/tickets/assigned"
-                class="border-transparent text-gray-500 hover:border-amber-300 hover:text-amber-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200"
-                :class="isActiveRoute('/tickets/assigned') ? 'border-amber-500 text-amber-600 font-semibold' : ''">
+                class="border-transparent text-gray-500 dark:text-gray-300 hover:border-amber-300 hover:text-amber-700 dark:hover:text-amber-400 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200"
+                :class="isActiveRoute('/tickets/assigned') ? 'border-amber-500 text-amber-600 dark:text-amber-400 font-semibold' : ''">
                 Assigned
               </NuxtLink>
 
@@ -49,16 +49,16 @@
               <!-- Admin area menu - only visible to admins -->
               <template v-if="isAdmin || isSuperAdmin">
                 <NuxtLink to="/admin"
-                  class="border-transparent text-gray-500 hover:border-amber-300 hover:text-amber-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200"
-                  :class="isActiveRoute('/admin') ? 'border-amber-500 text-amber-600 font-semibold' : ''">
+                  class="border-transparent text-gray-500 dark:text-gray-300 hover:border-amber-300 hover:text-amber-700 dark:hover:text-amber-400 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200"
+                  :class="isActiveRoute('/admin') ? 'border-amber-500 text-amber-600 dark:text-amber-400 font-semibold' : ''">
                   Admin area
                 </NuxtLink>
               </template>
 
               <template v-if="isAdmin || isSuperAdmin">
                 <NuxtLink to="/admin/mobile-report"
-                  class="border-transparent text-gray-500 hover:border-amber-300 hover:text-amber-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200"
-                  :class="isActiveRoute('/admin/mobile-report') ? 'border-amber-500 text-amber-600 font-semibold' : ''">
+                  class="border-transparent text-gray-500 dark:text-gray-300 hover:border-amber-300 hover:text-amber-700 dark:hover:text-amber-400 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200"
+                  :class="isActiveRoute('/admin/mobile-report') ? 'border-amber-500 text-amber-600 dark:text-amber-400 font-semibold' : ''">
                   LBB Plus Report
                 </NuxtLink>
               </template>
@@ -67,7 +67,10 @@
           </div>
 
           <!-- Right Side - User Menu -->
-          <div class="flex items-center">
+          <div class="flex items-center gap-2">
+            <!-- Theme Toggle -->
+            <ThemeToggle />
+
             <!-- Notification Bell -->
             <NotificationDropdown ref="notificationDropdown" />
 
@@ -78,10 +81,10 @@
                   class="flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 items-center">
                   <span class="sr-only">Open user menu</span>
                   <div
-                    class="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-medium mr-2">
+                    class="h-8 w-8 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center text-amber-700 dark:text-amber-300 font-medium mr-2">
                     {{ userInitials }}
                   </div>
-                  <span class="hidden md:flex text-gray-700 text-sm font-medium">{{ userName }}</span>
+                  <span class="hidden md:flex text-gray-700 dark:text-gray-200 text-sm font-medium">{{ userName }}</span>
                   <ChevronDownIcon class="ml-2 h-4 w-4 text-gray-500" />
                 </MenuButton>
               </div>
@@ -90,11 +93,11 @@
                 leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100"
                 leave-to-class="transform opacity-0 scale-95">
                 <MenuItems
-                  class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                  class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none">
                   <MenuItem v-slot="{ active }">
-                  <div class="px-4 py-2 border-b border-gray-100">
-                    <p class="text-sm font-medium text-gray-900">{{ userName }}</p>
-                    <p class="text-xs text-gray-500">{{ userEmail }}</p>
+                  <div class="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ userName }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ userEmail }}</p>
                     <div class="mt-1">
                       <span
                         class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
@@ -105,19 +108,19 @@
                   </MenuItem>
                   <MenuItem v-slot="{ active }">
                   <NuxtLink to="/profile">
-                    <a href="#" :class="[active ? 'bg-gray-100' : '', 'block px-4 py-2 text-sm text-gray-700']">
+                    <a href="#" :class="[active ? 'bg-gray-100 dark:bg-gray-700' : '', 'block px-4 py-2 text-sm text-gray-700 dark:text-gray-200']">
                       Your Profile
                     </a>
                   </NuxtLink>
                   </MenuItem>
                   <MenuItem v-slot="{ active }">
-                  <a href="#" :class="[active ? 'bg-gray-100' : '', 'block px-4 py-2 text-sm text-gray-700']">
+                  <a href="#" :class="[active ? 'bg-gray-100 dark:bg-gray-700' : '', 'block px-4 py-2 text-sm text-gray-700 dark:text-gray-200']">
                     Settings
                   </a>
                   </MenuItem>
                   <MenuItem v-slot="{ active }">
                   <a @click="logout"
-                    :class="[active ? 'bg-gray-100' : '', 'block px-4 py-2 text-sm text-red-600 cursor-pointer']">
+                    :class="[active ? 'bg-gray-100 dark:bg-gray-700' : '', 'block px-4 py-2 text-sm text-red-600 dark:text-red-400 cursor-pointer']">
                     Sign out
                   </a>
                   </MenuItem>
@@ -130,23 +133,23 @@
     </nav>
 
     <!-- Mobile menu for small screens -->
-    <div class="sm:hidden bg-white shadow-sm border-b border-gray-200 pb-2">
+    <div class="sm:hidden bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 pb-2">
       <div class="px-2 pt-2 pb-3 space-y-1">
         <NuxtLink to="/tickets" class="block px-3 py-2 rounded-md text-base font-medium transition-all duration-200"
-          :class="isActiveRoute('/tickets') ? 'bg-amber-100 text-amber-700 shadow-sm' : 'text-gray-500 hover:bg-amber-50 hover:text-amber-600'">
+          :class="isActiveRoute('/tickets') ? 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 shadow-sm' : 'text-gray-500 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-gray-700 hover:text-amber-600 dark:hover:text-amber-400'">
           Tickets
         </NuxtLink>
 
         <NuxtLink to="/tickets/assigned"
           class="block px-3 py-2 rounded-md text-base font-medium transition-all duration-200"
-          :class="isActiveRoute('/tickets/assigned') ? 'bg-amber-100 text-amber-700 shadow-sm' : 'text-gray-500 hover:bg-amber-50 hover:text-amber-600'">
+          :class="isActiveRoute('/tickets/assigned') ? 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 shadow-sm' : 'text-gray-500 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-gray-700 hover:text-amber-600 dark:hover:text-amber-400'">
           Assigned
         </NuxtLink>
 
         <!-- Admin area menu - only visible to admins -->
         <template v-if="isAdmin || isSuperAdmin">
           <NuxtLink to="/admin" class="block px-3 py-2 rounded-md text-base font-medium transition-all duration-200"
-            :class="isActiveRoute('/admin') ? 'bg-amber-100 text-amber-700 shadow-sm' : 'text-gray-500 hover:bg-amber-50 hover:text-amber-600'">
+            :class="isActiveRoute('/admin') ? 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 shadow-sm' : 'text-gray-500 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-gray-700 hover:text-amber-600 dark:hover:text-amber-400'">
             Admin area
           </NuxtLink>
         </template>
@@ -173,6 +176,7 @@ import {
   ChevronDownIcon
 } from '@heroicons/vue/24/outline'
 import NotificationDropdown from '~/components/NotificationDropdown.vue'
+import ThemeToggle from '~/components/ThemeToggle.vue'
 
 const route = useRoute()
 const router = useRouter()

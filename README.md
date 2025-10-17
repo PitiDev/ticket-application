@@ -9,6 +9,7 @@ A comprehensive ticket management system built with Nuxt 3, Node.js, and MySQL/M
 - **Department & Category Organization**: Organize tickets by department and category
 - **Real-time Notifications**: Instant notifications via Socket.IO when tickets are assigned
 - **Notification Center**: Dedicated page to view, filter, and manage all notifications
+- **Dark Mode & Light Mode**: Beautiful theme system with auto-detection and persistent preferences
 - **Email Notifications**: Automated emails for ticket assignments and updates
 - **Advanced Dashboard**: Interactive charts and analytics with Chart.js and ApexCharts
 - **Data Visualization**: Financial charts and trading views integration

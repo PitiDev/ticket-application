@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-IMAGE="172.16.4.62:5000/backend-ticket-system"
+IMAGE="172.16.4.62:5000/piti/backend-ticket-system"
 VERSION="${1:-latest}"
 
 echo "🚀 Building image: $IMAGE:$VERSION"

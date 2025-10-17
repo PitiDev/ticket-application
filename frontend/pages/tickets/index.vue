@@ -500,9 +500,9 @@ const isFormValid = computed(() => {
 </script>
 
 <template>
-  <div class="min-h-screen to-white">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 to-white transition-colors duration-200">
     <!-- Top Header Bar -->
-    <div class="sticky top-0 z-10 bg-white border-b border-amber-200 shadow-sm backdrop-blur-sm bg-white/95 rounded-lg">
+    <div class="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-amber-200 dark:border-gray-700 shadow-sm backdrop-blur-sm bg-white/95 dark:bg-gray-800/95 rounded-lg transition-colors duration-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 items-center justify-between">
           <!-- Left side -->
@@ -517,7 +517,7 @@ const isFormValid = computed(() => {
             <div class="relative">
               <MagnifyingGlassIcon class="pointer-events-none absolute left-4 top-3.5 h-5 w-5 text-amber-500" />
               <input type="text" v-model="searchQuery" @input="handleFilterChange"
-                class="h-12 w-full rounded-full border border-amber-200 bg-amber-50/60 pl-12 pr-4 text-gray-900 placeholder:text-amber-400 focus:ring-2 focus:ring-inset focus:ring-amber-500 focus:border-amber-500 sm:text-sm transition-all"
+                class="h-12 w-full rounded-full border border-amber-200 dark:border-gray-600 bg-amber-50/60 dark:bg-gray-700 pl-12 pr-4 text-gray-900 dark:text-gray-100 placeholder:text-amber-400 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-amber-500 focus:border-amber-500 sm:text-sm transition-all"
                 placeholder="Search tickets..." />
             </div>
           </div>
@@ -545,31 +545,31 @@ const isFormValid = computed(() => {
       <!-- Stats Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div v-for="stat in stats" :key="stat.name"
-          class="bg-white rounded-2xl shadow-sm border border-amber-100 p-6 hover:shadow-lg transition-shadow duration-200 group">
+          class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-amber-100 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-200 group">
           <div class="flex items-center">
             <div
               :class="['rounded-xl p-3', stat.lightColor, stat.borderColor, 'group-hover:scale-110 transition-transform duration-300']">
               <component :is="stat.icon" :class="['h-6 w-6', stat.color.replace('bg-', 'text-')]" />
             </div>
             <div class="ml-4">
-              <p class="text-sm font-medium text-gray-500">{{ stat.name }}</p>
-              <p class="text-2xl font-semibold text-gray-900">{{ stat.value }}</p>
+              <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ stat.name }}</p>
+              <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ stat.value }}</p>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Filters Bar -->
-      <div class="bg-white rounded-2xl shadow-sm border border-amber-100 p-4 mb-8">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-amber-100 dark:border-gray-700 p-4 mb-8 transition-colors duration-200">
         <div class="flex flex-wrap items-center gap-4">
           <div class="flex items-center gap-2">
-            <FunnelIcon class="h-5 w-5 text-amber-500" />
-            <span class="text-sm font-medium text-gray-700">Filters:</span>
+            <FunnelIcon class="h-5 w-5 text-amber-500 dark:text-amber-400" />
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Filters:</span>
           </div>
 
           <div class="flex flex-wrap items-center gap-4">
             <select v-model="selectedStatus" @change="handleFilterChange"
-              class="rounded-lg border-amber-200 text-sm focus:ring-amber-500 focus:border-amber-500 bg-white hover:border-amber-300 transition-colors">
+              class="rounded-lg border-amber-200 dark:border-gray-600 text-sm focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:border-amber-300 transition-colors">
               <option value="all">All Status</option>
               <option>New</option>
               <option>In Progress</option>
@@ -578,7 +578,7 @@ const isFormValid = computed(() => {
             </select>
 
             <select v-model="selectedPriority" @change="handleFilterChange"
-              class="rounded-lg border-amber-200 text-sm focus:ring-amber-500 focus:border-amber-500 bg-white hover:border-amber-300 transition-colors">
+              class="rounded-lg border-amber-200 dark:border-gray-600 text-sm focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:border-amber-300 transition-colors">
               <option value="all">All Priorities</option>
               <option>High</option>
               <option>Medium</option>
@@ -586,7 +586,7 @@ const isFormValid = computed(() => {
             </select>
 
             <select v-model="selectedDepartment" @change="handleFilterChange"
-              class="rounded-lg border-amber-200 text-sm focus:ring-amber-500 focus:border-amber-500 bg-white hover:border-amber-300 transition-colors">
+              class="rounded-lg border-amber-200 dark:border-gray-600 text-sm focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:border-amber-300 transition-colors">
               <option value="all">All Departments</option>
               <option v-for="dept in departments" :key="dept.id" :value="dept.name">
                 {{ dept.name }}
@@ -595,9 +595,9 @@ const isFormValid = computed(() => {
           </div>
 
           <div class="ml-auto flex items-center gap-2">
-            <span class="text-sm text-gray-500">Show:</span>
+            <span class="text-sm text-gray-500 dark:text-gray-400">Show:</span>
             <select v-model="pagination.limit" @change="changeLimit(parseInt($event.target.value))"
-              class="rounded-lg border-amber-200 text-sm focus:ring-amber-500 focus:border-amber-500 bg-white hover:border-amber-300 transition-colors">
+              class="rounded-lg border-amber-200 dark:border-gray-600 text-sm focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:border-amber-300 transition-colors">
               <option v-for="limit in availableLimits" :key="limit" :value="limit">
                 {{ limit }} items
               </option>
@@ -609,17 +609,17 @@ const isFormValid = computed(() => {
       <!-- Loading State -->
       <div v-if="loading" class="flex justify-center py-12">
         <div class="flex flex-col items-center gap-3">
-          <div class="w-16 h-16 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin"></div>
-          <p class="text-gray-600 mt-4">Loading tickets...</p>
+          <div class="w-16 h-16 border-4 border-amber-200 dark:border-gray-600 border-t-amber-600 dark:border-t-amber-500 rounded-full animate-spin"></div>
+          <p class="text-gray-600 dark:text-gray-400 mt-4">Loading tickets...</p>
         </div>
       </div>
 
       <!-- No Results State -->
       <div v-else-if="tickets.length === 0"
-        class="text-center py-12 bg-white rounded-2xl shadow-sm border border-amber-100">
-        <InboxIcon class="mx-auto h-12 w-12 text-amber-400" />
-        <h3 class="mt-2 text-lg font-medium text-gray-900">No tickets found</h3>
-        <p class="mt-1 text-sm text-gray-500">
+        class="text-center py-12 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-amber-100 dark:border-gray-700 transition-colors duration-200">
+        <InboxIcon class="mx-auto h-12 w-12 text-amber-400 dark:text-amber-500" />
+        <h3 class="mt-2 text-lg font-medium text-gray-900 dark:text-gray-100">No tickets found</h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Try changing your search or filter criteria.
         </p>
         <div class="mt-6">
@@ -636,7 +636,7 @@ const isFormValid = computed(() => {
         <!-- Enhanced Card Layout -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div v-for="ticket in tickets" :key="ticket.id"
-            class="group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 border border-amber-100 overflow-hidden hover:scale-[1.02] relative">
+            class="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 border border-amber-100 dark:border-gray-700 overflow-hidden hover:scale-[1.02] relative">
             <!-- Gold accent at top -->
             <div class="h-1.5 bg-gradient-to-r from-amber-400 to-amber-600 w-full absolute top-0"></div>
 
@@ -657,14 +657,14 @@ const isFormValid = computed(() => {
                 </div>
               </div>
 
-              <h3 class="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 line-clamp-1">
                 {{ ticket.title }}
               </h3>
-              <p class="text-sm text-gray-600 line-clamp-2 mb-4">
+              <p class="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-4">
                 {{ ticket.description }}
               </p>
 
-              <div class="flex items-center justify-between text-sm text-gray-500">
+              <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                 <div class="flex items-center">
                   <UserGroupIcon class="h-4 w-4 mr-1.5 text-amber-600" />
                   {{ ticket.department_name || 'General' }}
@@ -685,15 +685,15 @@ const isFormValid = computed(() => {
                     </span>
                   </span>
                 </div>
-                <div class="text-sm text-gray-500">
-                  Assigned to <span class="font-medium text-gray-900">{{ ticket.assigned_full_name ||
+                <div class="text-sm text-gray-500 dark:text-gray-400">
+                  Assigned to <span class="font-medium text-gray-900 dark:text-gray-100">{{ ticket.assigned_full_name ||
                     ticket.assigned_to_name }}</span>
                 </div>
               </div>
             </div>
 
             <!-- Ticket Footer -->
-            <div class="px-6 py-4 bg-amber-50 border-t border-amber-100">
+            <div class="px-6 py-4 bg-amber-50 dark:bg-gray-700/50 border-t border-amber-100 dark:border-gray-700">
               <NuxtLink :to="`/tickets/${ticket.id}`"
                 class="flex items-center justify-center text-sm font-medium text-amber-700 hover:text-red-600 group-hover:text-red-600">
                 View Details
@@ -705,7 +705,7 @@ const isFormValid = computed(() => {
 
         <!-- Pagination Controls -->
         <div
-          class="mt-8 flex items-center justify-between bg-white px-4 py-3 sm:px-6 rounded-xl shadow-sm border border-amber-100">
+          class="mt-8 flex items-center justify-between bg-white dark:bg-gray-800 px-4 py-3 sm:px-6 rounded-xl shadow-sm border border-amber-100 dark:border-gray-700 transition-colors duration-200">
           <div class="flex flex-1 justify-between sm:hidden">
             <button @click="prevPage" :disabled="!pagination.hasPrevPage" :class="[
               'relative inline-flex items-center rounded-md px-4 py-2 text-sm font-medium',
@@ -726,14 +726,14 @@ const isFormValid = computed(() => {
           </div>
           <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
             <div>
-              <p class="text-sm text-gray-700">
+              <p class="text-sm text-gray-700 dark:text-gray-300">
                 Showing <span class="font-medium">{{ paginationRange }}</span> results
               </p>
             </div>
             <div>
               <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
                 <button @click="firstPage" :disabled="!pagination.hasPrevPage"
-                  class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-amber-300 hover:bg-amber-50 focus:z-20 focus:outline-offset-0"
+                  class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 dark:text-gray-500 ring-1 ring-inset ring-amber-300 dark:ring-gray-600 hover:bg-amber-50 dark:hover:bg-gray-700 focus:z-20 focus:outline-offset-0"
                   :class="{ 'opacity-50 cursor-not-allowed': !pagination.hasPrevPage }">
                   <span class="sr-only">First page</span>
                   <ChevronDoubleLeftIcon class="h-5 w-5" aria-hidden="true" />

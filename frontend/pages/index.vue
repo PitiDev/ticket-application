@@ -1,5 +1,6 @@
 <script setup>
 import { useAuth } from '~/composables/useAuth'
+import { useThemeStore } from '~/stores/theme'
 import { ref, onMounted, computed, watch, onUnmounted } from 'vue'
 import {
   TicketIcon,
@@ -20,6 +21,7 @@ import {
 const config = useRuntimeConfig()
 const auth = useAuth()
 const route = useRoute()
+const themeStore = useThemeStore()
 
 // Safe default structure
 const dashboardData = ref({
@@ -138,6 +140,16 @@ const userRole = computed(() => {
   if (!dashboardData.value?.userInfo) return 'all';
   return dashboardData.value.userInfo.role === 'user' ? 'your' : 'all';
 })
+
+// Get theme-aware colors for charts
+const getChartThemeColors = () => {
+  const isDark = themeStore.isDark;
+  return {
+    text: isDark ? '#E5E7EB' : '#334155', // gray-200 : slate-700
+    grid: isDark ? 'rgba(75, 85, 99, 0.3)' : 'rgba(226, 232, 240, 0.6)', // gray-600 : slate-200
+    tooltip: isDark ? 'rgba(31, 41, 55, 0.95)' : 'rgba(17, 24, 39, 0.9)' // gray-800 : gray-900
+  };
+}
 
 // Clean up charts when component unmounts or before recreating
 const destroyCharts = () => {
@@ -348,15 +360,17 @@ const loadChartJs = () => {
 // Initialize charts
 const initializeCharts = () => {
   if (!process.client || !window.Chart) return;
-  
+
   try {
+    const themeColors = getChartThemeColors();
+
     // Status chart
     if (statusChartRef.value && chartData.value.statusData.labels.length) {
       // Destroy existing chart if any
       if (statusChartRef.value._chart) {
         statusChartRef.value._chart.destroy();
       }
-      
+
       statusChartRef.value._chart = new window.Chart(statusChartRef.value, {
         type: 'doughnut',
         data: {
@@ -379,15 +393,15 @@ const initializeCharts = () => {
               labels: {
                 boxWidth: 15,
                 padding: 15,
-                font: { 
+                font: {
                   size: 12,
                   weight: 'bold'
                 },
-                color: '#334155' // slate-700
+                color: themeColors.text
               }
             },
             tooltip: {
-              backgroundColor: 'rgba(17, 24, 39, 0.8)',
+              backgroundColor: themeColors.tooltip,
               titleFont: { size: 14, weight: 'bold' },
               bodyFont: { size: 13 },
               bodySpacing: 4,
@@ -424,7 +438,7 @@ const initializeCharts = () => {
       if (priorityChartRef.value._chart) {
         priorityChartRef.value._chart.destroy();
       }
-      
+
       priorityChartRef.value._chart = new window.Chart(priorityChartRef.value, {
         type: 'doughnut',
         data: {
@@ -447,15 +461,15 @@ const initializeCharts = () => {
               labels: {
                 boxWidth: 15,
                 padding: 15,
-                font: { 
+                font: {
                   size: 12,
-                  weight: 'bold' 
+                  weight: 'bold'
                 },
-                color: '#334155' // slate-700
+                color: themeColors.text
               }
             },
             tooltip: {
-              backgroundColor: 'rgba(17, 24, 39, 0.8)',
+              backgroundColor: themeColors.tooltip,
               titleFont: { size: 14, weight: 'bold' },
               bodyFont: { size: 13 },
               bodySpacing: 4,
@@ -522,7 +536,7 @@ const initializeCharts = () => {
             tooltip: {
               mode: 'index',
               intersect: false,
-              backgroundColor: 'rgba(17, 24, 39, 0.8)',
+              backgroundColor: themeColors.tooltip,
               titleFont: { size: 14, weight: 'bold' },
               bodyFont: { size: 13 },
               padding: 12,
@@ -535,14 +549,14 @@ const initializeCharts = () => {
           },
           scales: {
             x: {
-              grid: { 
+              grid: {
                 display: false,
                 drawBorder: false
               },
               ticks: {
                 maxRotation: 45,
                 minRotation: 45,
-                color: '#64748b', // slate-500
+                color: themeColors.text,
                 font: {
                   size: 11
                 }
@@ -550,13 +564,13 @@ const initializeCharts = () => {
             },
             y: {
               beginAtZero: true,
-              grid: { 
-                color: 'rgba(226, 232, 240, 0.6)',
+              grid: {
+                color: themeColors.grid,
                 drawBorder: false
               },
-              ticks: { 
+              ticks: {
                 precision: 0,
-                color: '#64748b', // slate-500
+                color: themeColors.text,
                 font: {
                   size: 11
                 },
@@ -630,6 +644,13 @@ watch(selectedTimeframe, () => {
   handleTimeframeChange();
 });
 
+// Watch for theme changes and update charts
+watch(() => themeStore.isDark, () => {
+  if (chartsInitialized.value) {
+    updateCharts();
+  }
+});
+
 // Update data when page becomes visible again
 const handleVisibilityChange = () => {
   if (document.visibilityState === 'visible') {
@@ -669,30 +690,30 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
     <!-- Modern Header with Gradient -->
-    <div class="bg-white shadow-sm rounded-b-xl mb-6">
+    <div class="bg-white dark:bg-gray-800 shadow-sm rounded-b-xl mb-6 transition-colors duration-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div class="flex flex-col gap-2">
             <h1 class="text-3xl font-bold bg-gradient-to-r from-yellow-500 to-amber-600 bg-clip-text text-transparent">
               Support Dashboard
             </h1>
-            <p class="text-gray-600">
+            <p class="text-gray-600 dark:text-gray-300">
               {{ userRole }} support ticket metrics and analytics
             </p>
           </div>
-          
+
           <!-- Timeframe Filter -->
-          <div class="flex items-center gap-4 bg-white rounded-lg border border-yellow-200 p-2 shadow-sm">
-            <div class="flex items-center gap-2 text-sm text-gray-500">
-              <CalendarIcon class="h-5 w-5 text-yellow-500" />
+          <div class="flex items-center gap-4 bg-white dark:bg-gray-700 rounded-lg border border-yellow-200 dark:border-gray-600 p-2 shadow-sm transition-colors duration-200">
+            <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+              <CalendarIcon class="h-5 w-5 text-yellow-500 dark:text-yellow-400" />
               <span>Time Period:</span>
             </div>
             <select
               v-model="selectedTimeframe"
               @change="handleTimeframeChange"
-              class="rounded-lg border border-yellow-200 bg-white px-3 py-2 text-sm focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200"
+              class="rounded-lg border border-yellow-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 dark:focus:ring-yellow-600 transition-colors duration-200"
             >
               <option v-for="option in timeframeOptions" :key="option.value" :value="option.value">
                 {{ option.label }}
@@ -705,23 +726,23 @@ onUnmounted(() => {
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
       <!-- Loading State -->
-      <div v-if="loading" 
+      <div v-if="loading"
            class="flex items-center justify-center min-h-[400px]">
         <div class="flex flex-col items-center gap-4">
-          <div class="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-          <p class="text-gray-600">Loading dashboard data...</p>
+          <div class="w-16 h-16 border-4 border-indigo-200 dark:border-gray-600 border-t-indigo-600 dark:border-t-indigo-400 rounded-full animate-spin"></div>
+          <p class="text-gray-600 dark:text-gray-400">Loading dashboard data...</p>
         </div>
       </div>
 
       <!-- Error State -->
-      <div v-else-if="error" 
-           class="mt-6 bg-red-50 border border-red-200 p-6 rounded-xl">
+      <div v-else-if="error"
+           class="mt-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-6 rounded-xl transition-colors duration-200">
         <div class="flex items-start">
-          <ExclamationCircleIcon class="h-6 w-6 text-red-500 mr-3 flex-shrink-0" />
+          <ExclamationCircleIcon class="h-6 w-6 text-red-500 dark:text-red-400 mr-3 flex-shrink-0" />
           <div>
-            <h3 class="text-lg font-medium text-red-800">An error occurred</h3>
-            <p class="mt-1 text-red-700">{{ error }}</p>
-            <button @click="fetchDashboardData" class="mt-3 inline-flex items-center px-3 py-1.5 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+            <h3 class="text-lg font-medium text-red-800 dark:text-red-200">An error occurred</h3>
+            <p class="mt-1 text-red-700 dark:text-red-300">{{ error }}</p>
+            <button @click="fetchDashboardData" class="mt-3 inline-flex items-center px-3 py-1.5 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 dark:text-red-200 bg-red-100 dark:bg-red-900/40 hover:bg-red-200 dark:hover:bg-red-900/60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200">
               <ArrowPathIcon class="h-4 w-4 mr-1" />
               Retry
             </button>
@@ -732,15 +753,15 @@ onUnmounted(() => {
       <!-- Dashboard Content -->
       <div v-else class="space-y-8">
         <!-- Selected Timeframe Display -->
-        <div class="bg-yellow-50 rounded-lg p-3 flex items-center border border-yellow-100">
-          <ClockIcon class="h-5 w-5 text-yellow-600 mr-2" />
-          <span class="text-yellow-700 font-medium">Showing data for: {{ getTimeframeLabel() }}</span>
+        <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 flex items-center border border-yellow-100 dark:border-yellow-800 transition-colors duration-200">
+          <ClockIcon class="h-5 w-5 text-yellow-600 dark:text-yellow-400 mr-2" />
+          <span class="text-yellow-700 dark:text-yellow-300 font-medium">Showing data for: {{ getTimeframeLabel() }}</span>
         </div>
-        
+
         <!-- Summary Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           <!-- Total Tickets -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 overflow-hidden">
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-200 overflow-hidden">
             <div class="p-5">
               <div class="flex items-center gap-4">
                 <div class="flex-shrink-0">
@@ -749,8 +770,8 @@ onUnmounted(() => {
                   </div>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-gray-500">Total Tickets</p>
-                  <p class="mt-1 text-2xl font-semibold text-gray-900">
+                  <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Tickets</p>
+                  <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">
                     {{ dashboardData.summary.total }}
                   </p>
                 </div>
@@ -760,7 +781,7 @@ onUnmounted(() => {
           </div>
 
           <!-- Open Tickets -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 overflow-hidden">
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-200 overflow-hidden">
             <div class="p-5">
               <div class="flex items-center gap-4">
                 <div class="flex-shrink-0">
@@ -769,8 +790,8 @@ onUnmounted(() => {
                   </div>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-gray-500">Open Tickets</p>
-                  <p class="mt-1 text-2xl font-semibold text-gray-900">
+                  <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Open Tickets</p>
+                  <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">
                     {{ dashboardData.summary.open }}
                   </p>
                 </div>
@@ -780,7 +801,7 @@ onUnmounted(() => {
           </div>
 
           <!-- In Progress -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 overflow-hidden">
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-200 overflow-hidden">
             <div class="p-5">
               <div class="flex items-center gap-4">
                 <div class="flex-shrink-0">
@@ -789,8 +810,8 @@ onUnmounted(() => {
                   </div>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-gray-500">In Progress</p>
-                  <p class="mt-1 text-2xl font-semibold text-gray-900">
+                  <p class="text-sm font-medium text-gray-500 dark:text-gray-400">In Progress</p>
+                  <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">
                     {{ dashboardData.summary.inProgress }}
                   </p>
                 </div>
@@ -800,7 +821,7 @@ onUnmounted(() => {
           </div>
 
           <!-- Closed -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 overflow-hidden">
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-200 overflow-hidden">
             <div class="p-5">
               <div class="flex items-center gap-4">
                 <div class="flex-shrink-0">
@@ -809,8 +830,8 @@ onUnmounted(() => {
                   </div>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-gray-500">Closed Tickets</p>
-                  <p class="mt-1 text-2xl font-semibold text-gray-900">
+                  <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Closed Tickets</p>
+                  <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">
                     {{ dashboardData.summary.closed }}
                   </p>
                 </div>
@@ -821,22 +842,22 @@ onUnmounted(() => {
         </div>
 
         <!-- Ticket Timeline Chart -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="p-5 border-b border-gray-100 flex justify-between items-center">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200">
+          <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
             <div class="flex items-center gap-2">
-              <div class="p-1.5 bg-yellow-100 rounded-lg">
-                <ChartBarIcon class="h-5 w-5 text-yellow-600" />
+              <div class="p-1.5 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                <ChartBarIcon class="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
               </div>
-              <h2 class="text-lg font-semibold text-gray-900">Ticket Timeline</h2>
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Ticket Timeline</h2>
             </div>
-            <div class="flex items-center gap-1 text-sm text-yellow-600 font-medium">
+            <div class="flex items-center gap-1 text-sm text-yellow-600 dark:text-yellow-400 font-medium">
               <ArrowTrendingUpIcon class="h-4 w-4" />
               <span>Ticket Volume Over Time</span>
             </div>
           </div>
-          
+
           <div class="p-5">
-            <div v-if="chartData.timelineData.labels.length === 0" class="text-center text-gray-500 py-8">
+            <div v-if="chartData.timelineData.labels.length === 0" class="text-center text-gray-500 dark:text-gray-400 py-8">
               <p>No timeline data available for the selected time period.</p>
             </div>
             <div v-else class="h-72">
@@ -848,18 +869,18 @@ onUnmounted(() => {
         <!-- Status and Priority Charts -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <!-- Status Distribution -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="p-5 border-b border-gray-100">
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200">
+            <div class="p-5 border-b border-gray-100 dark:border-gray-700">
               <div class="flex items-center gap-2">
-                <div class="p-1.5 bg-yellow-100 rounded-lg">
-                  <ChartBarIcon class="h-5 w-5 text-yellow-600" />
+                <div class="p-1.5 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                  <ChartBarIcon class="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
                 </div>
-                <h2 class="text-lg font-semibold text-gray-900">Tickets by Status</h2>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Tickets by Status</h2>
               </div>
             </div>
-            
+
             <div class="p-5">
-              <div v-if="chartData.statusData.labels.length === 0" class="text-center text-gray-500 py-8">
+              <div v-if="chartData.statusData.labels.length === 0" class="text-center text-gray-500 dark:text-gray-400 py-8">
                 <p>No data available for the selected time period.</p>
               </div>
               <div v-else class="h-64 relative">
@@ -874,18 +895,18 @@ onUnmounted(() => {
           </div>
           
           <!-- Priority Distribution -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="p-5 border-b border-gray-100">
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200">
+            <div class="p-5 border-b border-gray-100 dark:border-gray-700">
               <div class="flex items-center gap-2">
-                <div class="p-1.5 bg-yellow-100 rounded-lg">
-                  <FireIcon class="h-5 w-5 text-yellow-600" />
+                <div class="p-1.5 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                  <FireIcon class="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
                 </div>
-                <h2 class="text-lg font-semibold text-gray-900">Tickets by Priority</h2>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Tickets by Priority</h2>
               </div>
             </div>
-            
+
             <div class="p-5">
-              <div v-if="chartData.priorityData.labels.length === 0" class="text-center text-gray-500 py-8">
+              <div v-if="chartData.priorityData.labels.length === 0" class="text-center text-gray-500 dark:text-gray-400 py-8">
                 <p>No data available for the selected time period.</p>
               </div>
               <div v-else class="h-64 relative">
@@ -901,26 +922,26 @@ onUnmounted(() => {
         </div>
 
         <!-- Recent Tickets -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="p-5 border-b border-gray-100 flex justify-between items-center">
-            <h2 class="text-lg font-semibold text-gray-900">Recent Tickets</h2>
-            
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200">
+          <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Recent Tickets</h2>
+
             <!-- Ownership Label -->
-            <div v-if="dashboardData.userInfo && dashboardData.userInfo.role && dashboardData.userInfo.role !== 'admin' && dashboardData.userInfo.role !== 'super_admin'" 
-                 class="text-sm bg-yellow-50 text-yellow-700 py-1 px-3 rounded-full border border-yellow-200">
+            <div v-if="dashboardData.userInfo && dashboardData.userInfo.role && dashboardData.userInfo.role !== 'admin' && dashboardData.userInfo.role !== 'super_admin'"
+                 class="text-sm bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 py-1 px-3 rounded-full border border-yellow-200 dark:border-yellow-800">
               Your Tickets Only
             </div>
           </div>
-          
+
           <!-- No Tickets Message -->
-          <div v-if="!dashboardData.recentTickets || dashboardData.recentTickets.length === 0" class="p-6 text-center text-gray-500">
+          <div v-if="!dashboardData.recentTickets || dashboardData.recentTickets.length === 0" class="p-6 text-center text-gray-500 dark:text-gray-400">
             <p>No tickets found for the selected time period.</p>
           </div>
-          
-          <div v-else class="divide-y divide-gray-100">
-            <div v-for="ticket in dashboardData.recentTickets" 
-                 :key="ticket.id" 
-                 class="p-5 hover:bg-gray-50/50 transition-colors">
+
+          <div v-else class="divide-y divide-gray-100 dark:divide-gray-700">
+            <div v-for="ticket in dashboardData.recentTickets"
+                 :key="ticket.id"
+                 class="p-5 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
               <div class="flex items-center gap-6">
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-3">
@@ -942,7 +963,7 @@ onUnmounted(() => {
                     </span>
                   </div>
                   
-                  <div class="mt-1 flex items-center gap-4 text-sm text-gray-500">
+                  <div class="mt-1 flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                     <div class="flex items-center gap-1.5">
                       <ClockIcon class="h-4 w-4" />
                       {{ formatDate(ticket.created_at) }}
@@ -957,22 +978,22 @@ onUnmounted(() => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div class="flex items-center gap-4">
                   <span v-if="ticket.priority !== 'High' && ticket.priority !== 'Critical'"
-                        :class="getPriorityColor(ticket.priority)" 
+                        :class="getPriorityColor(ticket.priority)"
                         class="text-sm font-medium">
                     {{ ticket.priority }}
                   </span>
-                  <ChevronRightIcon class="h-5 w-5 text-gray-400" />
+                  <ChevronRightIcon class="h-5 w-5 text-gray-400 dark:text-gray-500" />
                 </div>
               </div>
             </div>
           </div>
-          
+
           <!-- View All Link -->
-          <div class="bg-gray-50 px-5 py-3 text-center">
-            <NuxtLink to="/tickets" class="text-sm text-indigo-600 font-medium hover:text-indigo-500">
+          <div class="bg-gray-50 dark:bg-gray-700/50 px-5 py-3 text-center transition-colors duration-200">
+            <NuxtLink to="/tickets" class="text-sm text-indigo-600 dark:text-indigo-400 font-medium hover:text-indigo-500 dark:hover:text-indigo-300">
               View all tickets
             </NuxtLink>
           </div>

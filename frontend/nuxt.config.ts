@@ -5,6 +5,11 @@ export default defineNuxtConfig({
   ],
   css: ['~/assets/css/lao-font.css',
   ],
+  tailwindcss: {
+    config: {
+      darkMode: 'class', // Enable class-based dark mode
+    }
+  },
   runtimeConfig: {
     public: {
       apiBase: 'http://172.16.4.62:9000/api' //http://172.16.4.62:9000/api

@@ -133,9 +133,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen to-red-50">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 to-red-50 transition-colors duration-200">
     <!-- Modern Header with Gold/Red Gradient -->
-    <div class="bg-white border-b border-amber-200 rounded-lg shadow-sm">
+    <div class="bg-white dark:bg-gray-800 border-b border-amber-200 dark:border-gray-700 rounded-lg shadow-sm transition-colors duration-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div class="flex-1">
@@ -144,7 +144,7 @@ onMounted(() => {
             >
               Assigned Tickets
             </h1>
-            <p class="mt-2 text-gray-600">
+            <p class="mt-2 text-gray-600 dark:text-gray-300">
               Track and manage your team's assigned support tickets
             </p>
           </div>
@@ -153,12 +153,12 @@ onMounted(() => {
               <div
                 class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
               >
-                <MagnifyingGlassIcon class="h-5 w-5 text-amber-400" />
+                <MagnifyingGlassIcon class="h-5 w-5 text-amber-400 dark:text-amber-500" />
               </div>
               <input
                 v-model="searchQuery"
                 type="text"
-                class="block w-full pl-10 pr-3 py-2 border border-amber-200 rounded-lg bg-white shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                class="block w-full pl-10 pr-3 py-2 border border-amber-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                 placeholder="Search tickets..."
               />
             </div>
@@ -181,7 +181,7 @@ onMounted(() => {
             id="assignee"
             v-model="selectedAssignee"
             @change="handleAssigneeChange($event.target.value)"
-            class="block w-full md:w-64 pl-4 pr-10 py-3 text-base border-2 border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent rounded-xl shadow-sm bg-white hover:border-amber-300 transition-all appearance-none"
+            class="block w-full md:w-64 pl-4 pr-10 py-3 text-base border-2 border-amber-200 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent rounded-xl shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:border-amber-300 dark:hover:border-gray-500 transition-all appearance-none"
           >
             <option value="">Select team member</option>
             <option v-for="user in assignees" :key="user.id" :value="user.id">
@@ -189,7 +189,7 @@ onMounted(() => {
             </option>
           </select>
           <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-            <UserIcon class="h-5 w-5 text-amber-400" />
+            <UserIcon class="h-5 w-5 text-amber-400 dark:text-amber-500" />
           </div>
         </div>
       </div>
@@ -232,7 +232,7 @@ onMounted(() => {
             },
           ]"
           :key="index"
-          class="bg-white rounded-xl shadow-lg border border-amber-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+          class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-amber-100 dark:border-gray-700 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
         >
           <div class="p-6">
             <div class="flex items-center gap-4">
@@ -242,8 +242,8 @@ onMounted(() => {
                 </div>
               </div>
               <div class="flex-1">
-                <p class="text-sm font-medium text-gray-500">{{ stat.label }}</p>
-                <p class="mt-1 text-2xl font-bold text-gray-900">{{ stat.value }}</p>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ stat.label }}</p>
+                <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{{ stat.value }}</p>
               </div>
             </div>
           </div>
@@ -251,20 +251,20 @@ onMounted(() => {
       </div>
 
       <!-- Modern Tickets List -->
-      <div class="bg-white rounded-xl shadow-lg border border-amber-100 overflow-hidden">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-amber-100 dark:border-gray-700 overflow-hidden transition-colors duration-200">
         <!-- Loading State -->
         <div v-if="loading" class="flex flex-col items-center justify-center py-16">
-          <ArrowPathIcon class="w-12 h-12 animate-spin text-amber-600" />
-          <p class="mt-4 text-gray-600">Loading assigned tickets...</p>
+          <ArrowPathIcon class="w-12 h-12 animate-spin text-amber-600 dark:text-amber-500" />
+          <p class="mt-4 text-gray-600 dark:text-gray-400">Loading assigned tickets...</p>
         </div>
 
         <!-- Content -->
         <div v-else>
           <!-- Tickets Table -->
           <div v-if="filteredTickets.length > 0" class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-amber-100">
+            <table class="min-w-full divide-y divide-amber-100 dark:divide-gray-700">
               <thead>
-                <tr class="bg-gradient-to-r from-amber-50 to-red-50">
+                <tr class="bg-gradient-to-r from-amber-50 to-red-50 dark:from-gray-700 dark:to-gray-700">
                   <th
                     v-for="header in [
                       'Ticket',
@@ -275,25 +275,25 @@ onMounted(() => {
                       'Created At',
                     ]"
                     :key="header"
-                    class="px-6 py-4 text-left text-xs font-semibold text-amber-800 uppercase tracking-wider"
+                    class="px-6 py-4 text-left text-xs font-semibold text-amber-800 dark:text-amber-400 uppercase tracking-wider"
                   >
                     {{ header }}
                   </th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-amber-50">
+              <tbody class="divide-y divide-amber-50 dark:divide-gray-700">
                 <tr
                   v-for="ticket in filteredTickets"
                   :key="ticket.id"
-                  class="hover:bg-gradient-to-r hover:from-amber-50/50 hover:to-red-50/50 transition-all duration-200 cursor-pointer transform hover:scale-[1.01]"
+                  class="hover:bg-gradient-to-r hover:from-amber-50/50 hover:to-red-50/50 dark:hover:from-gray-700/50 dark:hover:to-gray-700/50 transition-all duration-200 cursor-pointer transform hover:scale-[1.01]"
                   @click="router.push(`/tickets/${ticket.id}`)"
                 >
                   <td class="px-6 py-4">
                     <div>
-                      <div class="font-bold text-amber-700 hover:text-red-600 transition-colors">
+                      <div class="font-bold text-amber-700 dark:text-amber-400 hover:text-red-600 dark:hover:text-red-400 transition-colors">
                         {{ ticket.ticket_number }}
                       </div>
-                      <div class="mt-1 text-sm text-gray-900 font-medium">{{ ticket.title }}</div>
+                      <div class="mt-1 text-sm text-gray-900 dark:text-gray-100 font-medium">{{ ticket.title }}</div>
                     </div>
                   </td>
                   <td class="px-6 py-4">
@@ -314,21 +314,21 @@ onMounted(() => {
                   </td>
                   <td class="px-6 py-4">
                     <div class="flex items-center gap-2">
-                      <UserIcon class="h-4 w-4 text-amber-500" />
-                      <span class="text-sm text-gray-900 font-medium">{{
+                      <UserIcon class="h-4 w-4 text-amber-500 dark:text-amber-400" />
+                      <span class="text-sm text-gray-900 dark:text-gray-100 font-medium">{{
                         ticket.created_by_name
                       }}</span>
                     </div>
                   </td>
                   <td class="px-6 py-4">
                     <div class="flex items-center gap-2">
-                      <BuildingOfficeIcon class="h-4 w-4 text-amber-500" />
-                      <span class="text-sm text-gray-900 font-medium">{{
+                      <BuildingOfficeIcon class="h-4 w-4 text-amber-500 dark:text-amber-400" />
+                      <span class="text-sm text-gray-900 dark:text-gray-100 font-medium">{{
                         ticket.department_name
                       }}</span>
                     </div>
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-600 font-medium">
+                  <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300 font-medium">
                     {{ formatDate(ticket.created_at) }}
                   </td>
                 </tr>
@@ -338,11 +338,11 @@ onMounted(() => {
 
           <!-- Modern Empty State -->
           <div v-else-if="selectedAssignee" class="text-center py-16">
-            <div class="mx-auto h-16 w-16 rounded-full bg-gradient-to-r from-amber-100 to-red-100 flex items-center justify-center">
-              <ExclamationCircleIcon class="h-8 w-8 text-amber-600" />
+            <div class="mx-auto h-16 w-16 rounded-full bg-gradient-to-r from-amber-100 to-red-100 dark:from-amber-900/30 dark:to-red-900/30 flex items-center justify-center">
+              <ExclamationCircleIcon class="h-8 w-8 text-amber-600 dark:text-amber-400" />
             </div>
-            <h3 class="mt-6 text-xl font-bold text-gray-900">No tickets found</h3>
-            <p class="mt-2 text-gray-500 max-w-sm mx-auto">
+            <h3 class="mt-6 text-xl font-bold text-gray-900 dark:text-gray-100">No tickets found</h3>
+            <p class="mt-2 text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
               There are currently no tickets assigned to this team member. Check back later or assign some tickets.
             </p>
             <div class="mt-6">
@@ -357,17 +357,17 @@ onMounted(() => {
 
           <!-- Modern No Selection State -->
           <div v-else class="text-center py-16">
-            <div class="mx-auto h-16 w-16 rounded-full bg-gradient-to-r from-amber-100 to-red-100 flex items-center justify-center">
-              <UserIcon class="h-8 w-8 text-amber-600" />
+            <div class="mx-auto h-16 w-16 rounded-full bg-gradient-to-r from-amber-100 to-red-100 dark:from-amber-900/30 dark:to-red-900/30 flex items-center justify-center">
+              <UserIcon class="h-8 w-8 text-amber-600 dark:text-amber-400" />
             </div>
-            <h3 class="mt-6 text-xl font-bold text-gray-900">Select a team member</h3>
-            <p class="mt-2 text-gray-500 max-w-sm mx-auto">
+            <h3 class="mt-6 text-xl font-bold text-gray-900 dark:text-gray-100">Select a team member</h3>
+            <p class="mt-2 text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
               Choose a team member from the dropdown above to view their assigned tickets and track progress.
             </p>
             <div class="mt-6">
               <button
                 @click="$refs.assigneeSelect?.focus()"
-                class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-amber-700 bg-amber-100 hover:bg-amber-200 transition-all"
+                class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/30 hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-all"
               >
                 <UserIcon class="h-4 w-4 mr-2" />
                 Choose Team Member

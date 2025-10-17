@@ -3,7 +3,7 @@ const db = require('../config/database');
 // Get user notifications
 exports.getUserNotifications = async (req, res) => {
     try {
-        const userId = req.query.userId || req.user?.id;
+        const userId = parseInt(req.query.userId) || req.user?.id;
         const limit = parseInt(req.query.limit) || 20;
         const unreadOnly = req.query.unreadOnly === 'true';
 
@@ -26,8 +26,7 @@ exports.getUserNotifications = async (req, res) => {
             query += ' AND n.is_read = FALSE';
         }
 
-        query += ' ORDER BY n.created_at DESC LIMIT ?';
-        params.push(limit);
+        query += ` ORDER BY n.created_at DESC LIMIT ${limit}`;
 
         const [notifications] = await db.execute(query, params);
 
@@ -44,7 +43,7 @@ exports.getUserNotifications = async (req, res) => {
 // Get unread notification count
 exports.getUnreadCount = async (req, res) => {
     try {
-        const userId = req.query.userId || req.user?.id;
+        const userId = parseInt(req.query.userId) || req.user?.id;
 
         if (!userId) {
             return res.status(400).json({ message: 'User ID is required' });

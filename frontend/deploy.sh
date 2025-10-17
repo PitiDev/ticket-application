@@ -1,6 +1,6 @@
 #!/bin/bash
 
-IMAGE=172.16.4.62:5000/forntend-ticket-system
+IMAGE=172.16.4.62:5000/piti/forntend-ticket-system
 
 if [ -n "$1" ]; then VERSION=$1; else VERSION="latest";fi
 

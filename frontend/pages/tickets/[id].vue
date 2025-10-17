@@ -510,11 +510,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen to-red-50">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 to-red-50 transition-colors duration-200">
     <!-- Back button and breadcrumbs -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
       <div class="flex items-center space-x-2 text-sm">
-        <NuxtLink to="/tickets" class="text-gray-600 hover:text-amber-700 transition-colors">
+        <NuxtLink to="/tickets" class="text-gray-600 dark:text-gray-300 hover:text-amber-700 dark:hover:text-amber-400 transition-colors">
           <div class="flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
               stroke="currentColor" class="w-4 h-4 mr-1">
@@ -523,8 +523,8 @@ onMounted(() => {
             Back to Tickets
           </div>
         </NuxtLink>
-        <span class="text-gray-400">/</span>
-        <span class="text-gray-900 font-medium">{{ ticket?.ticket_number }}</span>
+        <span class="text-gray-400 dark:text-gray-500">/</span>
+        <span class="text-gray-900 dark:text-gray-100 font-medium">{{ ticket?.ticket_number }}</span>
       </div>
     </div>
 
@@ -532,21 +532,21 @@ onMounted(() => {
       <!-- Loading state -->
       <div v-if="loading" class="flex justify-center py-12">
         <div class="flex flex-col items-center">
-          <ArrowPathIcon class="w-12 h-12 animate-spin text-amber-600" />
-          <p class="mt-4 text-gray-600">Loading ticket details...</p>
+          <ArrowPathIcon class="w-12 h-12 animate-spin text-amber-600 dark:text-amber-500" />
+          <p class="mt-4 text-gray-600 dark:text-gray-300">Loading ticket details...</p>
         </div>
       </div>
 
       <!-- Error state -->
-      <div v-else-if="error" class="rounded-md bg-red-50 p-4 my-6 border border-red-200">
+      <div v-else-if="error" class="rounded-md bg-red-50 dark:bg-red-900/20 p-4 my-6 border border-red-200 dark:border-red-800">
         <div class="flex">
           <div class="flex-shrink-0">
-            <ExclamationCircleIcon class="h-5 w-5 text-red-500" aria-hidden="true" />
+            <ExclamationCircleIcon class="h-5 w-5 text-red-500 dark:text-red-400" aria-hidden="true" />
           </div>
           <div class="ml-3">
-            <h3 class="text-sm font-medium text-red-800">{{ error }}</h3>
+            <h3 class="text-sm font-medium text-red-800 dark:text-red-300">{{ error }}</h3>
             <div class="mt-2">
-              <button @click="initData" class="text-sm font-medium text-red-800 hover:text-red-700">
+              <button @click="initData" class="text-sm font-medium text-red-800 dark:text-red-300 hover:text-red-700 dark:hover:text-red-200">
                 Try again
               </button>
             </div>
@@ -561,9 +561,9 @@ onMounted(() => {
           <!-- Main Content -->
           <div class="lg:col-span-2 space-y-6">
             <!-- Header -->
-            <div class="bg-white rounded-xl shadow-lg p-6 border border-amber-200/50">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-amber-200/50 dark:border-gray-700 transition-colors duration-200">
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                <h1 class="text-2xl font-bold text-gray-900">{{ ticket?.title }}</h1>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ ticket?.title }}</h1>
                 <div class="flex items-center space-x-2">
                   <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ring-1 ring-inset"
                     :class="statusColors[ticket?.status_name]">
@@ -575,7 +575,7 @@ onMounted(() => {
                   </span>
 
                   <button @click="openUpdateDialog"
-                    class="p-2 bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition-colors shadow-sm"
+                    class="p-2 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors shadow-sm"
                     title="Update ticket">
                     <PencilIcon class="w-4 h-4" />
                   </button>
@@ -586,29 +586,29 @@ onMounted(() => {
               </div>
 
               <!-- Meta information -->
-              <div class="flex flex-wrap gap-4 mb-6 text-sm text-gray-600">
+              <div class="flex flex-wrap gap-4 mb-6 text-sm text-gray-600 dark:text-gray-300">
                 <div class="flex items-center">
-                  <UserIcon class="h-4 w-4 mr-1.5 text-amber-500" />
-                  <span>Created by <span class="font-medium text-gray-800">{{ ticket?.created_by_name }}</span></span>
+                  <UserIcon class="h-4 w-4 mr-1.5 text-amber-500 dark:text-amber-400" />
+                  <span>Created by <span class="font-medium text-gray-800 dark:text-gray-100">{{ ticket?.created_by_name }}</span></span>
                 </div>
                 <div class="flex items-center">
-                  <ClockIcon class="h-4 w-4 mr-1.5 text-amber-500" />
+                  <ClockIcon class="h-4 w-4 mr-1.5 text-amber-500 dark:text-amber-400" />
                   <span>{{ formatDate(ticket?.created_at) }}</span>
                 </div>
                 <div class="flex items-center">
-                  <UserCircleIcon class="h-4 w-4 mr-1.5 text-amber-500" />
-                  <span>Assigned to <span class="font-medium text-gray-800">{{ currentAssigneeName }}</span></span>
+                  <UserCircleIcon class="h-4 w-4 mr-1.5 text-amber-500 dark:text-amber-400" />
+                  <span>Assigned to <span class="font-medium text-gray-800 dark:text-gray-100">{{ currentAssigneeName }}</span></span>
                 </div>
                 <div v-if="ticket?.due_date" class="flex items-center">
-                  <CalendarIcon class="h-4 w-4 mr-1.5 text-red-500" />
-                  <span>Due: <span class="font-medium text-red-700">{{ formatDate(ticket?.due_date) }}</span></span>
+                  <CalendarIcon class="h-4 w-4 mr-1.5 text-red-500 dark:text-red-400" />
+                  <span>Due: <span class="font-medium text-red-700 dark:text-red-400">{{ formatDate(ticket?.due_date) }}</span></span>
                 </div>
               </div>
 
               <!-- Description -->
-              <div class="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg p-4 mb-6 border border-amber-100">
-                <h3 class="text-sm font-medium text-amber-700 mb-2">Description</h3>
-                <div class="prose prose-sm max-w-none text-gray-700 whitespace-pre-line">
+              <div class="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-lg p-4 mb-6 border border-amber-100 dark:border-amber-800">
+                <h3 class="text-sm font-medium text-amber-700 dark:text-amber-400 mb-2">Description</h3>
+                <div class="prose prose-sm max-w-none text-gray-700 dark:text-gray-300 whitespace-pre-line">
                   {{ ticket?.description }}
                 </div>
               </div>
@@ -616,14 +616,14 @@ onMounted(() => {
               <!-- Category & Department -->
               <div class="flex flex-wrap gap-x-6 gap-y-3">
                 <div class="flex items-center">
-                  <TagIcon class="h-4 w-4 mr-1.5 text-amber-500" />
-                  <span class="text-sm text-gray-600">Category: <span class="font-medium text-gray-800">{{
+                  <TagIcon class="h-4 w-4 mr-1.5 text-amber-500 dark:text-amber-400" />
+                  <span class="text-sm text-gray-600 dark:text-gray-300">Category: <span class="font-medium text-gray-800 dark:text-gray-100">{{
                     ticket?.category_name
                       }}</span></span>
                 </div>
                 <div class="flex items-center">
-                  <BuildingOfficeIcon class="h-4 w-4 mr-1.5 text-amber-500" />
-                  <span class="text-sm text-gray-600">Department: <span class="font-medium text-gray-800">{{
+                  <BuildingOfficeIcon class="h-4 w-4 mr-1.5 text-amber-500 dark:text-amber-400" />
+                  <span class="text-sm text-gray-600 dark:text-gray-300">Department: <span class="font-medium text-gray-800 dark:text-gray-100">{{
                     ticket?.department_name
                       }}</span></span>
                 </div>
@@ -631,26 +631,26 @@ onMounted(() => {
             </div>
 
             <!-- Tabs for Comments, History, and Files -->
-            <div class="bg-white rounded-xl shadow-lg border border-amber-200/50 overflow-hidden">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-amber-200/50 dark:border-gray-700 overflow-hidden transition-colors duration-200">
               <!-- Tab headers -->
-              <div class="flex border-b border-amber-100">
+              <div class="flex border-b border-amber-100 dark:border-gray-700">
                 <button @click="activeTab = 'comments'"
                   class="flex items-center px-4 py-3 text-sm font-medium border-b-2 transition-colors"
-                  :class="activeTab === 'comments' ? 'text-amber-700 border-amber-600 bg-amber-50' : 'text-gray-500 border-transparent hover:text-gray-700 hover:border-amber-200'">
+                  :class="activeTab === 'comments' ? 'text-amber-700 dark:text-amber-400 border-amber-600 bg-amber-50 dark:bg-amber-900/20' : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300 hover:border-amber-200 dark:hover:border-gray-600'">
                   <ChatBubbleLeftIcon class="h-4 w-4 mr-2" />
                   Comments ({{ comments.length }})
                 </button>
 
                 <button @click="activeTab = 'history'"
                   class="flex items-center px-4 py-3 text-sm font-medium border-b-2 transition-colors"
-                  :class="activeTab === 'history' ? 'text-amber-700 border-amber-600 bg-amber-50' : 'text-gray-500 border-transparent hover:text-gray-700 hover:border-amber-200'">
+                  :class="activeTab === 'history' ? 'text-amber-700 dark:text-amber-400 border-amber-600 bg-amber-50 dark:bg-amber-900/20' : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300 hover:border-amber-200 dark:hover:border-gray-600'">
                   <ClockIcon class="h-4 w-4 mr-2" />
                   History ({{ history.length }})
                 </button>
 
                 <button @click="activeTab = 'files'"
                   class="flex items-center px-4 py-3 text-sm font-medium border-b-2 transition-colors"
-                  :class="activeTab === 'files' ? 'text-amber-700 border-amber-600 bg-amber-50' : 'text-gray-500 border-transparent hover:text-gray-700 hover:border-amber-200'">
+                  :class="activeTab === 'files' ? 'text-amber-700 dark:text-amber-400 border-amber-600 bg-amber-50 dark:bg-amber-900/20' : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-300 hover:border-amber-200 dark:hover:border-gray-600'">
                   <PaperClipIcon class="h-4 w-4 mr-2" />
                   Files ({{ attachments.length }})
                 </button>
@@ -663,9 +663,9 @@ onMounted(() => {
                   <!-- New Comment Form -->
                   <div class="mb-6">
                     <div class="mb-3">
-                      <label for="comment" class="block text-sm font-medium text-gray-700 mb-2">Add a comment</label>
+                      <label for="comment" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Add a comment</label>
                       <textarea id="comment" v-model="newComment" rows="3"
-                        class="block w-full rounded-lg border border-amber-200 shadow-sm focus:border-amber-500 focus:ring-amber-500 text-sm"
+                        class="block w-full rounded-lg border border-amber-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-amber-500 focus:ring-amber-500 text-sm"
                         placeholder="Type your comment here..."></textarea>
                     </div>
                     <div class="flex justify-end">
@@ -685,18 +685,18 @@ onMounted(() => {
 
                   <!-- Comments List -->
                   <div v-if="comments.length === 0" class="text-center py-8">
-                    <ChatBubbleOvalLeftEllipsisIcon class="h-12 w-12 mx-auto text-amber-300" />
-                    <h3 class="mt-2 text-sm font-medium text-gray-900">No comments</h3>
-                    <p class="mt-1 text-sm text-gray-500">Be the first to comment on this ticket.</p>
+                    <ChatBubbleOvalLeftEllipsisIcon class="h-12 w-12 mx-auto text-amber-300 dark:text-amber-600" />
+                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No comments</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Be the first to comment on this ticket.</p>
                   </div>
 
                   <div v-else class="space-y-6">
                     <div v-for="comment in comments" :key="comment.id"
-                      class="flex space-x-3 border-b border-amber-100 pb-6 last:border-0 last:pb-0">
+                      class="flex space-x-3 border-b border-amber-100 dark:border-gray-700 pb-6 last:border-0 last:pb-0">
                       <div class="flex-shrink-0">
                         <div
-                          class="h-10 w-10 rounded-full bg-gradient-to-r from-amber-200 to-red-200 flex items-center justify-center shadow-sm">
-                          <span class="text-amber-800 font-medium">{{ comment.user_name ?
+                          class="h-10 w-10 rounded-full bg-gradient-to-r from-amber-200 to-red-200 dark:from-amber-800 dark:to-red-800 flex items-center justify-center shadow-sm">
+                          <span class="text-amber-800 dark:text-amber-200 font-medium">{{ comment.user_name ?
                             comment.user_name.charAt(0).toUpperCase() : '?'
                           }}</span>
                         </div>
@@ -705,12 +705,12 @@ onMounted(() => {
                       <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between mb-2">
                           <div class="flex items-center space-x-2">
-                            <span class="font-medium text-gray-900">{{ comment.user_name }}</span>
-                            <span class="text-amber-500">·</span>
-                            <span class="text-gray-500">{{ formatRelativeTime(comment.created_at) }}</span>
+                            <span class="font-medium text-gray-900 dark:text-gray-100">{{ comment.user_name }}</span>
+                            <span class="text-amber-500 dark:text-amber-400">·</span>
+                            <span class="text-gray-500 dark:text-gray-400">{{ formatRelativeTime(comment.created_at) }}</span>
                           </div>
                         </div>
-                        <div class="text-gray-700 whitespace-pre-line">{{ comment.content }}</div>
+                        <div class="text-gray-700 dark:text-gray-300 whitespace-pre-line">{{ comment.content }}</div>
                       </div>
                     </div>
                   </div>
@@ -718,21 +718,21 @@ onMounted(() => {
 
                 <!-- History Tab -->
                 <div v-if="activeTab === 'history'">
-                  <h3 class="text-lg font-medium text-gray-900 mb-4">Activity History</h3>
+                  <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Activity History</h3>
 
                   <div v-if="history.length === 0" class="text-center py-8">
-                    <ClockIcon class="h-12 w-12 mx-auto text-amber-300" />
-                    <h3 class="mt-2 text-sm font-medium text-gray-900">No history</h3>
-                    <p class="mt-1 text-sm text-gray-500">This ticket has no activity history yet.</p>
+                    <ClockIcon class="h-12 w-12 mx-auto text-amber-300 dark:text-amber-600" />
+                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No history</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">This ticket has no activity history yet.</p>
                   </div>
 
                   <div v-else class="space-y-4">
                     <div v-for="(entry, index) in history" :key="index"
-                      class="flex items-start space-x-3 pb-4 border-b border-amber-100 last:border-0 last:pb-0">
+                      class="flex items-start space-x-3 pb-4 border-b border-amber-100 dark:border-gray-700 last:border-0 last:pb-0">
                       <div class="flex-shrink-0 mt-0.5">
                         <div
-                          class="h-8 w-8 rounded-full bg-gradient-to-r from-amber-100 to-red-100 flex items-center justify-center">
-                          <span class="text-amber-700 font-medium text-xs">{{ entry.user_name ?
+                          class="h-8 w-8 rounded-full bg-gradient-to-r from-amber-100 to-red-100 dark:from-amber-900/30 dark:to-red-900/30 flex items-center justify-center">
+                          <span class="text-amber-700 dark:text-amber-400 font-medium text-xs">{{ entry.user_name ?
                             entry.user_name.charAt(0).toUpperCase() :
                             '?' }}</span>
                         </div>
@@ -740,9 +740,9 @@ onMounted(() => {
 
                       <div class="flex-1">
                         <div class="text-sm">
-                          <span class="font-medium text-gray-900 mr-2">{{ entry.user_name }}</span>
-                          <span class="text-gray-700">{{ entry.action }}</span>
-                          <span v-if="entry.field_name" class="text-gray-700">
+                          <span class="font-medium text-gray-900 dark:text-gray-100 mr-2">{{ entry.user_name }}</span>
+                          <span class="text-gray-700 dark:text-gray-300">{{ entry.action }}</span>
+                          <span v-if="entry.field_name" class="text-gray-700 dark:text-gray-300">
                             {{ entry.field_name }}
                             <template v-if="entry.old_value || entry.new_value">
                               from <span class="font-medium">"{{ entry.old_value || 'none' }}"</span> to
@@ -750,7 +750,7 @@ onMounted(() => {
                             </template>
                           </span>
                         </div>
-                        <div class="text-sm text-amber-600 mt-1">
+                        <div class="text-sm text-amber-600 dark:text-amber-400 mt-1">
                           {{ formatRelativeTime(entry.created_at) }}
                         </div>
                       </div>
@@ -760,40 +760,40 @@ onMounted(() => {
 
                 <!-- Files Tab -->
                 <div v-if="activeTab === 'files'">
-                  <h3 class="text-lg font-medium text-gray-900 mb-4">Attachments</h3>
+                  <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Attachments</h3>
 
                   <div v-if="attachments.length === 0" class="text-center py-8">
-                    <PaperClipIcon class="h-12 w-12 mx-auto text-amber-300" />
-                    <h3 class="mt-2 text-sm font-medium text-gray-900">No attachments</h3>
-                    <p class="mt-1 text-sm text-gray-500">There are no files attached to this ticket.</p>
+                    <PaperClipIcon class="h-12 w-12 mx-auto text-amber-300 dark:text-amber-600" />
+                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No attachments</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">There are no files attached to this ticket.</p>
                   </div>
 
                   <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div v-for="attachment in attachments" :key="attachment.id"
-                      class="border border-amber-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                      class="border border-amber-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
                       <!-- Preview for images -->
                       <div v-if="isImageFile(attachment.file_type)"
-                        class="aspect-video bg-gradient-to-br from-amber-50 to-red-50 flex items-center justify-center overflow-hidden">
+                        class="aspect-video bg-gradient-to-br from-amber-50 to-red-50 dark:from-amber-900/20 dark:to-red-900/20 flex items-center justify-center overflow-hidden">
                         <img :src="attachment.file_url" :alt="attachment.original_filename"
                           class="object-contain w-full h-full" />
                       </div>
 
                       <!-- Icon for non-images -->
                       <div v-else
-                        class="aspect-video bg-gradient-to-br from-amber-50 to-red-50 flex items-center justify-center">
-                        <DocumentTextIcon class="h-16 w-16 text-amber-400" />
+                        class="aspect-video bg-gradient-to-br from-amber-50 to-red-50 dark:from-amber-900/20 dark:to-red-900/20 flex items-center justify-center">
+                        <DocumentTextIcon class="h-16 w-16 text-amber-400 dark:text-amber-500" />
                       </div>
 
                       <!-- File info -->
-                      <div class="p-3 bg-white">
-                        <p class="font-medium text-sm text-gray-900 truncate" :title="attachment.original_filename">
+                      <div class="p-3 bg-white dark:bg-gray-800">
+                        <p class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate" :title="attachment.original_filename">
                           {{ attachment.original_filename }}
                         </p>
                         <div class="flex items-center justify-between mt-2">
-                          <span class="text-xs text-gray-500">{{ formatFileSize(attachment.file_size) }}</span>
+                          <span class="text-xs text-gray-500 dark:text-gray-400">{{ formatFileSize(attachment.file_size) }}</span>
 
                           <a :href="attachment.file_url" target="_blank"
-                            class="text-xs font-medium text-amber-700 hover:text-red-600 transition-colors">
+                            class="text-xs font-medium text-amber-700 dark:text-amber-400 hover:text-red-600 dark:hover:text-red-400 transition-colors">
                             View
                           </a>
                         </div>
@@ -808,8 +808,8 @@ onMounted(() => {
           <!-- Sidebar -->
           <div class="space-y-6">
             <!-- Quick Actions Card -->
-            <div class="bg-white rounded-xl shadow-lg p-6 border border-amber-200/50">
-              <h2 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-amber-200/50 dark:border-gray-700 transition-colors duration-200">
+              <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Quick Actions</h2>
 
               <div class="space-y-3">
                 <button @click="openUpdateDialog"
@@ -821,53 +821,53 @@ onMounted(() => {
             </div>
 
             <!-- Details Card -->
-            <div class="bg-white rounded-xl shadow-lg p-6 border border-amber-200/50">
-              <h2 class="text-lg font-medium text-gray-900 mb-4">Ticket Details</h2>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-amber-200/50 dark:border-gray-700 transition-colors duration-200">
+              <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Ticket Details</h2>
 
               <div class="space-y-4">
                 <div class="flex items-center justify-between">
-                  <span class="text-gray-500">Ticket #</span>
-                  <span class="font-medium">{{ ticket?.ticket_number }}</span>
+                  <span class="text-gray-500 dark:text-gray-400">Ticket #</span>
+                  <span class="font-medium text-gray-900 dark:text-gray-100">{{ ticket?.ticket_number }}</span>
                 </div>
 
                 <div class="flex items-center justify-between">
-                  <span class="text-gray-500">Department</span>
-                  <span class="font-medium">{{ ticket?.department_name }}</span>
+                  <span class="text-gray-500 dark:text-gray-400">Department</span>
+                  <span class="font-medium text-gray-900 dark:text-gray-100">{{ ticket?.department_name }}</span>
                 </div>
 
                 <div class="flex items-center justify-between">
-                  <span class="text-gray-500">Category</span>
-                  <span class="font-medium">{{ ticket?.category_name }}</span>
+                  <span class="text-gray-500 dark:text-gray-400">Category</span>
+                  <span class="font-medium text-gray-900 dark:text-gray-100">{{ ticket?.category_name }}</span>
                 </div>
 
                 <div class="flex items-center justify-between">
-                  <span class="text-gray-500">Status</span>
+                  <span class="text-gray-500 dark:text-gray-400">Status</span>
                   <span class="font-medium px-2 py-0.5 rounded-full text-xs" :class="statusColors[ticket?.status_name]">
                     {{ ticket?.status_name }}
                   </span>
                 </div>
 
                 <div class="flex items-center justify-between">
-                  <span class="text-gray-500">Priority</span>
+                  <span class="text-gray-500 dark:text-gray-400">Priority</span>
                   <span class="font-medium" :class="priorityTextColors[ticket?.priority_name]">
                     {{ ticket?.priority_name }}
                   </span>
                 </div>
 
                 <div class="flex items-center justify-between">
-                  <span class="text-gray-500">Assigned To</span>
-                  <span class="font-medium">{{ currentAssigneeName }}</span>
+                  <span class="text-gray-500 dark:text-gray-400">Assigned To</span>
+                  <span class="font-medium text-gray-900 dark:text-gray-100">{{ currentAssigneeName }}</span>
                 </div>
 
                 <div class="flex items-center justify-between" v-if="ticket?.due_date">
-                  <span class="text-gray-500">Due Date</span>
-                  <span class="font-medium text-red-600">{{ formatDate(ticket.due_date) }}</span>
+                  <span class="text-gray-500 dark:text-gray-400">Due Date</span>
+                  <span class="font-medium text-red-600 dark:text-red-400">{{ formatDate(ticket.due_date) }}</span>
                 </div>
 
                 <div class="flex items-center justify-between" v-if="ticket?.parent_ticket_number">
-                  <span class="text-gray-500">Parent Ticket</span>
+                  <span class="text-gray-500 dark:text-gray-400">Parent Ticket</span>
                   <NuxtLink :to="`/tickets/${ticket.parent_ticket_id}`"
-                    class="font-medium text-amber-600 hover:text-red-600 transition-colors">
+                    class="font-medium text-amber-600 dark:text-amber-400 hover:text-red-600 dark:hover:text-red-400 transition-colors">
                     {{ ticket.parent_ticket_number }}
                   </NuxtLink>
                 </div>
@@ -876,7 +876,7 @@ onMounted(() => {
 
               <!-- Delete button - only shown to ticket creator -->
               <button v-if="isTicketCreator" @click="openDeleteDialog"
-                class="w-full flex items-center justify-center px-4 py-2.5 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all">
+                class="w-full flex items-center justify-center px-4 py-2.5 border border-red-300 dark:border-red-800 rounded-md shadow-sm text-sm font-medium text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all">
                 <TrashIcon class="h-5 w-5 mr-2" />
                 Delete Ticket
               </button>
@@ -888,10 +888,10 @@ onMounted(() => {
 
       <!-- No ticket state -->
       <div v-else-if="!loading && !error"
-        class="bg-white rounded-xl shadow-lg p-8 text-center border border-amber-200/50">
-        <ExclamationCircleIcon class="h-12 w-12 mx-auto text-red-500" />
-        <h3 class="mt-2 text-lg font-medium text-gray-900">Ticket not found</h3>
-        <p class="mt-1 text-gray-500">The ticket you're looking for doesn't exist or you don't have permission to view
+        class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center border border-amber-200/50 dark:border-gray-700 transition-colors duration-200">
+        <ExclamationCircleIcon class="h-12 w-12 mx-auto text-red-500 dark:text-red-400" />
+        <h3 class="mt-2 text-lg font-medium text-gray-900 dark:text-gray-100">Ticket not found</h3>
+        <p class="mt-1 text-gray-500 dark:text-gray-400">The ticket you're looking for doesn't exist or you don't have permission to view
           it.</p>
         <div class="mt-6">
           <NuxtLink to="/tickets"
@@ -916,8 +916,8 @@ onMounted(() => {
               enter-to="opacity-100 scale-100" leave="ease-in duration-200" leave-from="opacity-100 scale-100"
               leave-to="opacity-0 scale-95">
               <DialogPanel
-                class="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-2xl transition-all border border-amber-200">
-                <DialogTitle as="h3" class="text-xl font-semibold leading-6 text-gray-900 mb-4">
+                class="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-2xl transition-all border border-amber-200 dark:border-gray-700">
+                <DialogTitle as="h3" class="text-xl font-semibold leading-6 text-gray-900 dark:text-gray-100 mb-4">
                   Update Ticket
                 </DialogTitle>
 
@@ -925,7 +925,7 @@ onMounted(() => {
                   <div class="grid grid-cols-2 gap-6">
                     <!-- Status Options -->
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Status
                       </label>
                       <div class="grid grid-cols-1 gap-3">
@@ -933,16 +933,16 @@ onMounted(() => {
                           <button type="button" @click="selectedStatus = status.id" :class="[
                             'flex items-center justify-between px-4 py-3 rounded-lg border-2 transition-all duration-200 w-full',
                             selectedStatus === status.id
-                              ? 'border-amber-600 bg-amber-50'
-                              : 'border-gray-200 hover:border-amber-200',
+                              ? 'border-amber-600 bg-amber-50 dark:bg-amber-900/20'
+                              : 'border-gray-200 dark:border-gray-600 hover:border-amber-200 dark:hover:border-amber-700',
                           ]">
                             <div class="flex items-center">
                               <component :is="status.icon" class="h-5 w-5 mr-2" :class="status.color" />
-                              <span class="font-medium text-gray-900">
+                              <span class="font-medium text-gray-900 dark:text-gray-100">
                                 {{ status.name }}
                               </span>
                             </div>
-                            <CheckIcon v-if="selectedStatus === status.id" class="h-5 w-5 text-amber-600" />
+                            <CheckIcon v-if="selectedStatus === status.id" class="h-5 w-5 text-amber-600 dark:text-amber-400" />
                           </button>
                         </div>
                       </div>
@@ -950,58 +950,58 @@ onMounted(() => {
 
                     <!-- Assignee Selection -->
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Assign To
                       </label>
                       <Combobox v-model="selectedAssignee">
                         <div class="relative">
                           <div
-                            class="relative w-full rounded-lg border-2 border-amber-200 hover:border-amber-300 shadow-sm">
+                            class="relative w-full rounded-lg border-2 border-amber-200 dark:border-gray-600 hover:border-amber-300 dark:hover:border-gray-500 shadow-sm">
                             <ComboboxInput
-                              class="w-full rounded-lg border-0 bg-white py-2.5 pl-10 pr-10 text-sm focus:border-amber-500 focus:ring-amber-500"
+                              class="w-full rounded-lg border-0 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 py-2.5 pl-10 pr-10 text-sm focus:border-amber-500 focus:ring-amber-500"
                               :displayValue="(id) => users.find(user => user.id === id)?.full_name || users.find(user => user.id === id)?.username || 'Unassigned'"
                               placeholder="Search for a user..." @change="userQuery = $event.target.value" />
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                              <MagnifyingGlassIcon class="h-5 w-5 text-amber-400" />
+                              <MagnifyingGlassIcon class="h-5 w-5 text-amber-400 dark:text-amber-500" />
                             </div>
                             <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
-                              <ChevronUpDownIcon class="h-5 w-5 text-amber-400" aria-hidden="true" />
+                              <ChevronUpDownIcon class="h-5 w-5 text-amber-400 dark:text-amber-500" aria-hidden="true" />
                             </ComboboxButton>
                           </div>
                           <TransitionRoot leave="transition ease-in duration-100" leaveFrom="opacity-100"
                             leaveTo="opacity-0" @after-leave="userQuery = ''">
                             <ComboboxOptions
-                              class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                              class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white dark:bg-gray-700 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                               <!-- Unassigned option -->
                               <ComboboxOption :value="null" v-slot="{ selected, active }" as="template">
                                 <li class="relative cursor-default select-none py-2 pl-3 pr-9"
-                                  :class="{ 'bg-amber-600 text-white': active, 'text-gray-900': !active }">
+                                  :class="{ 'bg-amber-600 text-white': active, 'text-gray-900 dark:text-gray-100': !active }">
                                   <div class="flex items-center">
-                                    <UserIcon class="h-5 w-5 text-gray-400 mr-3" :class="{ 'text-white': active }" />
+                                    <UserIcon class="h-5 w-5 text-gray-400 dark:text-gray-500 mr-3" :class="{ 'text-white': active }" />
                                     <span class="block truncate font-medium">
                                       Unassigned
                                     </span>
                                   </div>
                                   <span v-if="selected" class="absolute inset-y-0 right-0 flex items-center pr-4"
-                                    :class="{ 'text-white': active, 'text-amber-600': !active }">
+                                    :class="{ 'text-white': active, 'text-amber-600 dark:text-amber-400': !active }">
                                     <CheckIcon class="h-5 w-5" aria-hidden="true" />
                                   </span>
                                 </li>
                               </ComboboxOption>
 
                               <div v-if="filteredUsers.length === 0 && userQuery !== ''"
-                                class="relative cursor-default select-none py-2 px-4 text-gray-700">
+                                class="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300">
                                 Nothing found.
                               </div>
 
                               <ComboboxOption v-for="user in filteredUsers" :key="user.id" :value="user.id"
                                 v-slot="{ selected, active }" as="template">
                                 <li class="relative cursor-default select-none py-2 pl-3 pr-9"
-                                  :class="{ 'bg-amber-600 text-white': active, 'text-gray-900': !active }">
+                                  :class="{ 'bg-amber-600 text-white': active, 'text-gray-900 dark:text-gray-100': !active }">
                                   <div class="flex items-center">
                                     <span
-                                      class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 mr-3">
-                                      <span class="text-sm font-medium leading-none text-amber-700"
+                                      class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30 mr-3">
+                                      <span class="text-sm font-medium leading-none text-amber-700 dark:text-amber-400"
                                         :class="{ 'text-white': active }">
                                         {{ user.full_name ? user.full_name.charAt(0).toUpperCase() :
                                           user.username.charAt(0).toUpperCase() }}
@@ -1011,14 +1011,14 @@ onMounted(() => {
                                       :class="{ 'font-medium': selected, 'font-normal': !selected }">
                                       {{ user.full_name || user.username }}
                                     </span>
-                                    <span v-if="user.email" class="ml-2 truncate text-sm text-gray-500"
-                                      :class="{ 'text-amber-200': active, 'text-gray-500': !active }">
+                                    <span v-if="user.email" class="ml-2 truncate text-sm text-gray-500 dark:text-gray-400"
+                                      :class="{ 'text-amber-200': active, 'text-gray-500 dark:text-gray-400': !active }">
                                       {{ user.email }}
                                     </span>
                                   </div>
 
                                   <span v-if="selected" class="absolute inset-y-0 right-0 flex items-center pr-4"
-                                    :class="{ 'text-white': active, 'text-amber-600': !active }">
+                                    :class="{ 'text-white': active, 'text-amber-600 dark:text-amber-400': !active }">
                                     <CheckIcon class="h-5 w-5" aria-hidden="true" />
                                   </span>
                                 </li>
@@ -1033,7 +1033,7 @@ onMounted(() => {
                   <!-- Dialog Actions -->
                   <div class="mt-6 flex justify-end space-x-3">
                     <button type="button"
-                      class="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-colors"
+                      class="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-colors"
                       @click="showUpdateDialog = false">
                       Cancel
                     </button>
@@ -1067,28 +1067,28 @@ onMounted(() => {
               enter-to="opacity-100 scale-100" leave="ease-in duration-200" leave-from="opacity-100 scale-100"
               leave-to="opacity-0 scale-95">
               <DialogPanel
-                class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all border border-red-200">
-                <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900">
-                  <div class="flex items-center text-red-600">
+                class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl transition-all border border-red-200 dark:border-red-800">
+                <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">
+                  <div class="flex items-center text-red-600 dark:text-red-400">
                     <ExclamationCircleIcon class="h-6 w-6 mr-2" />
                     Delete Ticket
                   </div>
                 </DialogTitle>
 
                 <div class="mt-4">
-                  <p class="text-sm text-gray-600">
+                  <p class="text-sm text-gray-600 dark:text-gray-300">
                     Are you sure you want to delete ticket <span class="font-medium">{{ ticket?.ticket_number }}</span>?
                     This action cannot be undone.
                   </p>
 
-                  <div class="bg-red-50 p-3 rounded-lg mt-3 border border-red-100">
-                    <p class="text-sm text-red-700 font-medium">{{ ticket?.title }}</p>
+                  <div class="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg mt-3 border border-red-100 dark:border-red-800">
+                    <p class="text-sm text-red-700 dark:text-red-300 font-medium">{{ ticket?.title }}</p>
                   </div>
                 </div>
 
                 <div class="mt-6 flex justify-end space-x-3">
                   <button type="button"
-                    class="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+                    class="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
                     @click="showDeleteDialog = false">
                     Cancel
                   </button>

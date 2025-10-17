@@ -56,6 +56,51 @@ export default defineNuxtPlugin(() => {
       duration: 5000,
     });
 
+    // Show browser push notification (HTTPS or localhost only)
+    try {
+      // Check if we're on HTTPS or localhost
+      const isSecure = window.location.protocol === 'https:';
+      const isLocalhost = window.location.hostname === 'localhost' ||
+                          window.location.hostname === '127.0.0.1' ||
+                          window.location.hostname === '[::1]';
+
+      if ('Notification' in window && Notification.permission === 'granted' && (isSecure || isLocalhost)) {
+        const browserNotif = new Notification(`🎫 ${notification.title}`, {
+          body: notification.message,
+          icon: '/notification-icon.png',
+          badge: '/notification-badge.png',
+          tag: notification.ticket_id ? `ticket-${notification.ticket_id}` : undefined,
+          requireInteraction: false,
+          data: {
+            ticketId: notification.ticket_id,
+            ticketNumber: notification.ticket_number,
+            type: notification.type,
+          },
+        });
+
+        // Handle notification click - navigate to ticket
+        browserNotif.onclick = (event) => {
+          event.preventDefault();
+          window.focus();
+
+          if (notification.ticket_id) {
+            window.location.href = `/tickets/${notification.ticket_id}`;
+          }
+
+          browserNotif.close();
+        };
+
+        // Auto-close after 10 seconds
+        setTimeout(() => {
+          browserNotif.close();
+        }, 10000);
+      } else if (!isSecure && !isLocalhost) {
+        console.log('Browser notifications require HTTPS or localhost. Using toast notification only.');
+      }
+    } catch (e) {
+      console.log('Could not show browser notification:', e);
+    }
+
     // Play notification sound (optional)
     try {
       const audio = new Audio('/notification-sound.mp3');
