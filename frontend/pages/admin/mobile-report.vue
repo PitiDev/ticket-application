@@ -513,6 +513,102 @@
           </div>
         </div>
 
+        <!-- Bank Distribution Card -->
+        <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
+          <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+            🏦 Buy Gold Transactions by Bank
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- BCEL Bank -->
+            <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
+              <div class="flex items-center gap-2 mb-3">
+                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                <h4 class="font-bold text-green-800">{{ buyTransactionsByBank.bcel.name }}</h4>
+              </div>
+              <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-gray-600">Transactions:</span>
+                  <span class="text-lg font-bold text-green-700">{{ buyTransactionsByBank.bcel.count }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-gray-600">Amount:</span>
+                  <span class="text-sm font-semibold text-green-600">{{ formatCurrency(buyTransactionsByBank.bcel.amount) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-gray-600">Weight:</span>
+                  <span class="text-sm font-semibold text-green-600">{{ formatWeight(buyTransactionsByBank.bcel.weight) }}g</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- LDB Bank -->
+            <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-200">
+              <div class="flex items-center gap-2 mb-3">
+                <div class="w-3 h-3 rounded-full bg-purple-500"></div>
+                <h4 class="font-bold text-purple-800">{{ buyTransactionsByBank.ldb.name }}</h4>
+              </div>
+              <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-gray-600">Transactions:</span>
+                  <span class="text-lg font-bold text-purple-700">{{ buyTransactionsByBank.ldb.count }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-gray-600">Amount:</span>
+                  <span class="text-sm font-semibold text-purple-600">{{ formatCurrency(buyTransactionsByBank.ldb.amount) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-gray-600">Weight:</span>
+                  <span class="text-sm font-semibold text-purple-600">{{ formatWeight(buyTransactionsByBank.ldb.weight) }}g</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- PSV Bank -->
+            <div class="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-4 border border-orange-200">
+              <div class="flex items-center gap-2 mb-3">
+                <div class="w-3 h-3 rounded-full bg-orange-500"></div>
+                <h4 class="font-bold text-orange-800">{{ buyTransactionsByBank.psv.name }}</h4>
+              </div>
+              <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-gray-600">Transactions:</span>
+                  <span class="text-lg font-bold text-orange-700">{{ buyTransactionsByBank.psv.count }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-gray-600">Amount:</span>
+                  <span class="text-sm font-semibold text-orange-600">{{ formatCurrency(buyTransactionsByBank.psv.amount) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-gray-600">Weight:</span>
+                  <span class="text-sm font-semibold text-orange-600">{{ formatWeight(buyTransactionsByBank.psv.weight) }}g</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- LBB Bank -->
+            <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 border border-blue-200">
+              <div class="flex items-center gap-2 mb-3">
+                <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+                <h4 class="font-bold text-blue-800">{{ buyTransactionsByBank.lbb.name }}</h4>
+              </div>
+              <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-gray-600">Transactions:</span>
+                  <span class="text-lg font-bold text-blue-700">{{ buyTransactionsByBank.lbb.count }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-gray-600">Amount:</span>
+                  <span class="text-sm font-semibold text-blue-600">{{ formatCurrency(buyTransactionsByBank.lbb.amount) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-gray-600">Weight:</span>
+                  <span class="text-sm font-semibold text-blue-600">{{ formatWeight(buyTransactionsByBank.lbb.weight) }}g</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Recent Transactions -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <!-- Recent Sell Transactions -->
@@ -566,6 +662,17 @@
                         ? 'bg-green-100 text-green-700'
                         : 'bg-orange-100 text-orange-700'">
                         {{ transaction.STATUS || 'N/A' }}
+                      </span>
+                    </div>
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="text-xs text-gray-500">Bank:</span>
+                      <span class="px-2 py-1 rounded-full text-xs font-medium" :class="{
+                        'bg-green-100 text-green-700': getBankFromDeeplink(transaction.DEEPLINK).color === 'green',
+                        'bg-purple-100 text-purple-700': getBankFromDeeplink(transaction.DEEPLINK).color === 'purple',
+                        'bg-orange-100 text-orange-700': getBankFromDeeplink(transaction.DEEPLINK).color === 'orange',
+                        'bg-blue-100 text-blue-700': getBankFromDeeplink(transaction.DEEPLINK).color === 'blue'
+                      }">
+                        {{ getBankFromDeeplink(transaction.DEEPLINK).name }}
                       </span>
                     </div>
                     <p class="text-xs text-gray-500">{{ formatDate(transaction.CREATED_AT) }}</p>
@@ -925,6 +1032,30 @@ export default {
       const total = kycDateRangeData.value.TOTAL
       if (!total || total === 0) return 0
       return Math.round(((kycDateRangeData.value.APPROVED || 0) / total) * 100)
+    })
+
+    const buyTransactionsByBank = computed(() => {
+      const bankStats = {
+        bcel: { name: 'BCEL Bank', count: 0, amount: 0, weight: 0, color: 'green' },
+        ldb: { name: 'LDB Bank', count: 0, amount: 0, weight: 0, color: 'purple' },
+        psv: { name: 'PSV Bank', count: 0, amount: 0, weight: 0, color: 'orange' },
+        lbb: { name: 'LBB Bank', count: 0, amount: 0, weight: 0, color: 'blue' }
+      }
+
+      buyTransactions.value.forEach(transaction => {
+        const bank = getBankFromDeeplink(transaction.DEEPLINK)
+        let key = 'lbb'
+
+        if (bank.name === 'BCEL Bank') key = 'bcel'
+        else if (bank.name === 'LDB Bank') key = 'ldb'
+        else if (bank.name === 'PSV Bank') key = 'psv'
+
+        bankStats[key].count++
+        bankStats[key].amount += transaction.TOTAL_AMOUNT || 0
+        bankStats[key].weight += transaction.GOLD_WEIGHT || 0
+      })
+
+      return bankStats
     })
 
     // Login API call
@@ -2023,6 +2154,22 @@ export default {
       })
     }
 
+    const getBankFromDeeplink = (deeplink) => {
+      if (!deeplink) return { name: 'LBB Bank', color: 'blue' }
+
+      const deeplinkStr = String(deeplink).toLowerCase()
+
+      if (deeplinkStr.includes('onepay:')) {
+        return { name: 'BCEL Bank', color: 'green' }
+      } else if (deeplinkStr.includes('ldbpay:')) {
+        return { name: 'LDB Bank', color: 'purple' }
+      } else if (deeplinkStr.includes('la.com.psvbhi.hiapp:')) {
+        return { name: 'PSV Bank', color: 'orange' }
+      } else {
+        return { name: 'LBB Bank', color: 'blue' }
+      }
+    }
+
     onMounted(() => {
       checkAuthStatus() // Check login first
       initializeDateRange()
@@ -2054,6 +2201,7 @@ export default {
       netAmount,
       netWeight,
       kycApprovalRate,
+      buyTransactionsByBank,
       hasData,
       aiLoading,
       aiError,
@@ -2082,6 +2230,7 @@ export default {
       formatCurrency,
       formatWeight,
       formatDate,
+      getBankFromDeeplink,
       buyVsSellChart,
       transactionStatusChart,
       dailyTrendsChart,
