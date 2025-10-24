@@ -46,6 +46,13 @@
                Branch EOD
               </NuxtLink> -->
 
+              <!-- Reports menu -->
+              <NuxtLink to="/reports"
+                class="border-transparent text-gray-500 dark:text-gray-300 hover:border-amber-300 hover:text-amber-700 dark:hover:text-amber-400 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200"
+                :class="isActiveRoute('/reports') ? 'border-amber-500 text-amber-600 dark:text-amber-400 font-semibold' : ''">
+                Reports
+              </NuxtLink>
+
               <!-- Admin area menu - only visible to admins -->
               <template v-if="isAdmin || isSuperAdmin">
                 <NuxtLink to="/admin"
@@ -55,13 +62,21 @@
                 </NuxtLink>
               </template>
 
-              <template v-if="isAdmin || isSuperAdmin">
+              <!-- <template v-if="isAdmin || isSuperAdmin">
+                <NuxtLink to="/corebank/check_info"
+                  class="border-transparent text-gray-500 dark:text-gray-300 hover:border-amber-300 hover:text-amber-700 dark:hover:text-amber-400 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200"
+                  :class="isActiveRoute('/admin') ? 'border-amber-500 text-amber-600 dark:text-amber-400 font-semibold' : ''">
+                  CoreBank Info
+                </NuxtLink>
+              </template> -->
+
+              <!-- <template v-if="isAdmin || isSuperAdmin">
                 <NuxtLink to="/admin/mobile-report"
                   class="border-transparent text-gray-500 dark:text-gray-300 hover:border-amber-300 hover:text-amber-700 dark:hover:text-amber-400 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200"
                   :class="isActiveRoute('/admin/mobile-report') ? 'border-amber-500 text-amber-600 dark:text-amber-400 font-semibold' : ''">
                   LBB Plus Report
                 </NuxtLink>
-              </template>
+              </template> -->
 
             </div>
           </div>
@@ -144,6 +159,12 @@
           class="block px-3 py-2 rounded-md text-base font-medium transition-all duration-200"
           :class="isActiveRoute('/tickets/assigned') ? 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 shadow-sm' : 'text-gray-500 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-gray-700 hover:text-amber-600 dark:hover:text-amber-400'">
           Assigned
+        </NuxtLink>
+
+        <NuxtLink to="/reports"
+          class="block px-3 py-2 rounded-md text-base font-medium transition-all duration-200"
+          :class="isActiveRoute('/reports') ? 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 shadow-sm' : 'text-gray-500 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-gray-700 hover:text-amber-600 dark:hover:text-amber-400'">
+          Reports
         </NuxtLink>
 
         <!-- Admin area menu - only visible to admins -->

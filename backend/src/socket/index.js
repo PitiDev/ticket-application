@@ -3,11 +3,30 @@ const { Server } = require('socket.io');
 let io;
 
 const initializeSocket = (server) => {
+    // Allow multiple origins for development and production
+    const allowedOrigins = [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'http://ticket.laobullionbank.com',
+        'https://ticket.laobullionbank.com',
+        process.env.FRONTEND_URL
+    ].filter(Boolean); // Remove any undefined values
+
     io = new Server(server, {
         cors: {
-            origin: process.env.FRONTEND_URL || '*',
-            methods: ['GET', 'POST'],
-            credentials: true
+            origin: (origin, callback) => {
+                // Allow requests with no origin (like mobile apps or curl requests)
+                if (!origin) return callback(null, true);
+
+                if (allowedOrigins.includes(origin)) {
+                    callback(null, true);
+                } else {
+                    callback(null, false);
+                }
+            },
+            methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+            credentials: true,
+            allowedHeaders: ['Content-Type', 'Authorization']
         }
     });
 

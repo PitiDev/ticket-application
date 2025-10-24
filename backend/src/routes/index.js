@@ -16,6 +16,7 @@ const branchRoutes = require('./branchRoutes');
 const downloadRoutes = require('./downloadRoutes'); // Add this line
 const eventRoutes = require('./eventRoutes'); // Add this line
 const notificationRoutes = require('./notificationRoutes');
+const reportRoutes = require('./reportRoutes');
 
 
 
@@ -36,6 +37,7 @@ router.use('/branches', branchRoutes);
 router.use('/downloads', downloadRoutes);
 router.use('/events', eventRoutes); // Add this line
 router.use('/notifications', notificationRoutes);
+router.use('/reports', reportRoutes);
 
 
 

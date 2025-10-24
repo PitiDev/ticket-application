@@ -4,7 +4,7 @@
 definePageMeta({
   middleware: ['auth']
 })
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import {
   UserIcon,
   ClockIcon,
@@ -15,6 +15,9 @@ import {
   ExclamationCircleIcon,
   FlagIcon,
   MagnifyingGlassIcon,
+  FunnelIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from "@heroicons/vue/24/outline";
 
 const config = useRuntimeConfig();
@@ -28,6 +31,20 @@ const loading = ref(true);
 const selectedAssignee = ref(null);
 const assignees = ref([]);
 const searchQuery = ref("");
+const selectedStatus = ref("");
+const currentPage = ref(1);
+const pageSize = ref(10);
+const pageSizeOptions = [10, 25, 50, 100];
+
+// Available status options
+const statusOptions = [
+  { value: "", label: "All Statuses" },
+  { value: "New", label: "New" },
+  { value: "In Progress", label: "In Progress" },
+  { value: "Pending", label: "Pending" },
+  { value: "Resolved", label: "Resolved" },
+  { value: "Closed", label: "Closed" },
+];
 
 // Status and priority colors with gold/red theme
 const statusColors = {
@@ -45,16 +62,61 @@ const priorityColors = {
   Critical: "bg-red-200 text-red-900 ring-red-300 font-bold",
 };
 
+// Filtered tickets based on search and status
 const filteredTickets = computed(() => {
-  if (!searchQuery.value) return tickets.value;
-  const query = searchQuery.value.toLowerCase();
-  return tickets.value.filter(
-    (ticket) =>
-      ticket.title.toLowerCase().includes(query) ||
-      ticket.ticket_number.toLowerCase().includes(query) ||
-      ticket.created_by_name.toLowerCase().includes(query)
-  );
+  let result = tickets.value;
+
+  // Filter by search query
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    result = result.filter(
+      (ticket) =>
+        ticket.title.toLowerCase().includes(query) ||
+        ticket.ticket_number.toLowerCase().includes(query) ||
+        ticket.created_by_name.toLowerCase().includes(query)
+    );
+  }
+
+  // Filter by status
+  if (selectedStatus.value) {
+    result = result.filter((ticket) => ticket.status_name === selectedStatus.value);
+  }
+
+  return result;
 });
+
+// Paginated tickets
+const paginatedTickets = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return filteredTickets.value.slice(start, end);
+});
+
+// Pagination info
+const totalPages = computed(() => Math.ceil(filteredTickets.value.length / pageSize.value));
+const showingFrom = computed(() => {
+  if (filteredTickets.value.length === 0) return 0;
+  return (currentPage.value - 1) * pageSize.value + 1;
+});
+const showingTo = computed(() => {
+  const to = currentPage.value * pageSize.value;
+  return to > filteredTickets.value.length ? filteredTickets.value.length : to;
+});
+
+// Pagination functions
+const goToPage = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+  }
+};
+
+const handlePageSizeChange = () => {
+  currentPage.value = 1; // Reset to first page when page size changes
+};
+
+const handleFilterChange = () => {
+  currentPage.value = 1; // Reset to first page when filters change
+};
 
 // Fetch assignees
 async function fetchAssignees() {
@@ -119,6 +181,12 @@ function formatDate(date) {
 // Handle assignee change
 function handleAssigneeChange(userId) {
   selectedAssignee.value = userId;
+
+  // Reset filters and pagination
+  searchQuery.value = "";
+  selectedStatus.value = "";
+  currentPage.value = 1;
+
   if (userId) {
     fetchAssignedTickets(userId);
   } else {
@@ -148,34 +216,19 @@ onMounted(() => {
               Track and manage your team's assigned support tickets
             </p>
           </div>
-          <div class="flex items-center gap-4">
-            <div class="relative flex-1 md:w-64">
-              <div
-                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-              >
-                <MagnifyingGlassIcon class="h-5 w-5 text-amber-400 dark:text-amber-500" />
-              </div>
-              <input
-                v-model="searchQuery"
-                type="text"
-                class="block w-full pl-10 pr-3 py-2 border border-amber-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
-                placeholder="Search tickets..."
-              />
-            </div>
-            <NuxtLink
-              to="/tickets"
-              class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-700 hover:to-red-700 shadow-sm transition-all duration-200 ease-in-out transform hover:scale-105"
-            >
-              View All Tickets
-            </NuxtLink>
-          </div>
+          <NuxtLink
+            to="/tickets"
+            class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-700 hover:to-red-700 shadow-sm transition-all duration-200 ease-in-out transform hover:scale-105"
+          >
+            View All Tickets
+          </NuxtLink>
         </div>
       </div>
     </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Modern Assignee Selector -->
-      <div class="mb-8">
+      <div class="mb-6">
         <div class="relative">
           <select
             id="assignee"
@@ -190,6 +243,48 @@ onMounted(() => {
           </select>
           <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
             <UserIcon class="h-5 w-5 text-amber-400 dark:text-amber-500" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Search and Filter Section -->
+      <div v-if="selectedAssignee && tickets.length > 0" class="mb-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-amber-100 dark:border-gray-700 p-4 transition-colors duration-200">
+        <div class="flex flex-col md:flex-row gap-4">
+          <!-- Search Input -->
+          <div class="flex-1 relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <MagnifyingGlassIcon class="h-5 w-5 text-amber-400 dark:text-amber-500" />
+            </div>
+            <input
+              v-model="searchQuery"
+              @input="handleFilterChange"
+              type="text"
+              class="block w-full pl-10 pr-3 py-2.5 border border-amber-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+              placeholder="Search by ticket number, title, or creator..."
+            />
+          </div>
+
+          <!-- Status Filter -->
+          <div class="relative w-full md:w-56">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FunnelIcon class="h-5 w-5 text-amber-400 dark:text-amber-500" />
+            </div>
+            <select
+              v-model="selectedStatus"
+              @change="handleFilterChange"
+              class="block w-full pl-10 pr-3 py-2.5 border border-amber-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all appearance-none"
+            >
+              <option v-for="status in statusOptions" :key="status.value" :value="status.value">
+                {{ status.label }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Results Count -->
+          <div class="flex items-center px-4 py-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+            <span class="text-sm font-medium text-amber-700 dark:text-amber-300">
+              {{ filteredTickets.length }} {{ filteredTickets.length === 1 ? 'ticket' : 'tickets' }}
+            </span>
           </div>
         </div>
       </div>
@@ -283,7 +378,7 @@ onMounted(() => {
               </thead>
               <tbody class="divide-y divide-amber-50 dark:divide-gray-700">
                 <tr
-                  v-for="ticket in filteredTickets"
+                  v-for="ticket in paginatedTickets"
                   :key="ticket.id"
                   class="hover:bg-gradient-to-r hover:from-amber-50/50 hover:to-red-50/50 dark:hover:from-gray-700/50 dark:hover:to-gray-700/50 transition-all duration-200 cursor-pointer transform hover:scale-[1.01]"
                   @click="router.push(`/tickets/${ticket.id}`)"
@@ -334,6 +429,68 @@ onMounted(() => {
                 </tr>
               </tbody>
             </table>
+
+            <!-- Pagination Controls -->
+            <div v-if="totalPages > 0" class="bg-gradient-to-r from-amber-50 to-red-50 dark:from-gray-700 dark:to-gray-700 px-6 py-4 border-t border-amber-100 dark:border-gray-600">
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <!-- Showing Info and Page Size Selector -->
+                <div class="flex flex-col sm:flex-row items-center gap-4">
+                  <div class="text-sm text-gray-700 dark:text-gray-300">
+                    Showing <span class="font-semibold text-amber-600 dark:text-amber-400">{{ showingFrom }}</span> to
+                    <span class="font-semibold text-amber-600 dark:text-amber-400">{{ showingTo }}</span> of
+                    <span class="font-semibold text-amber-600 dark:text-amber-400">{{ filteredTickets.length }}</span> results
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <label class="text-sm text-gray-700 dark:text-gray-300">Per page:</label>
+                    <select
+                      v-model.number="pageSize"
+                      @change="handlePageSizeChange"
+                      class="border border-amber-200 dark:border-gray-600 rounded-lg px-2 py-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    >
+                      <option v-for="size in pageSizeOptions" :key="size" :value="size">{{ size }}</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Page Navigation -->
+                <div v-if="totalPages > 1" class="flex items-center gap-2">
+                  <button
+                    @click="goToPage(currentPage - 1)"
+                    :disabled="currentPage === 1"
+                    class="p-2 rounded-lg border border-amber-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    :class="{ 'hover:border-amber-300': currentPage !== 1 }"
+                  >
+                    <ChevronLeftIcon class="h-5 w-5" />
+                  </button>
+
+                  <div class="flex items-center gap-1">
+                    <button
+                      v-for="page in totalPages"
+                      :key="page"
+                      v-show="page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)"
+                      @click="goToPage(page)"
+                      class="px-3 py-1 rounded-lg border transition-all"
+                      :class="
+                        page === currentPage
+                          ? 'bg-gradient-to-r from-amber-600 to-red-600 text-white border-amber-600 font-semibold'
+                          : 'border-amber-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-gray-700 hover:border-amber-300'
+                      "
+                    >
+                      {{ page }}
+                    </button>
+                  </div>
+
+                  <button
+                    @click="goToPage(currentPage + 1)"
+                    :disabled="currentPage === totalPages"
+                    class="p-2 rounded-lg border border-amber-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    :class="{ 'hover:border-amber-300': currentPage !== totalPages }"
+                  >
+                    <ChevronRightIcon class="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Modern Empty State -->

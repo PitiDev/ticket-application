@@ -1,7 +1,7 @@
 <script setup>
 import { useAuth } from '~/composables/useAuth'
 import { useThemeStore } from '~/stores/theme'
-import { ref, onMounted, computed, watch, onUnmounted } from 'vue'
+import { ref, onMounted, computed, watch, onUnmounted, nextTick } from 'vue'
 import {
   TicketIcon,
   FolderOpenIcon,
@@ -319,13 +319,14 @@ const generateSampleTimelineData = (timeframe, totalTickets = 10) => {
 };
 
 // Load Chart.js
-const loadChartJs = () => {
+const loadChartJs = async () => {
   if (!process.client) return;
-  
+
   // Skip if already loaded
   if (window.Chart) {
     chartLoaded.value = true;
-    initializeCharts();
+    await nextTick();
+    await initializeCharts();
     return;
   }
   
@@ -333,7 +334,7 @@ const loadChartJs = () => {
   const script = document.createElement('script');
   script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
   script.async = true;
-  script.onload = () => {
+  script.onload = async () => {
     // Register necessary components
     window.Chart.register(
       window.Chart.CategoryScale,
@@ -345,27 +346,52 @@ const loadChartJs = () => {
       window.Chart.Legend,
       window.Chart.Filler
     );
-    
+
     // Set chart loaded flag
     chartLoaded.value = true;
-    
+
+    // Wait for next tick to ensure DOM is ready
+    await nextTick();
+
     // Initialize charts
-    initializeCharts();
+    await initializeCharts();
   };
   
   // Append script to document
   document.head.appendChild(script);
 };
 
-// Initialize charts
-const initializeCharts = () => {
+// Initialize charts with retry logic
+const initializeCharts = async (retryCount = 0) => {
   if (!process.client || !window.Chart) return;
+
+  // Wait for DOM to be ready
+  await nextTick();
+
+  // Check if any canvas refs are missing and retry if needed
+  const maxRetries = 3;
+  const canvasRefsReady = statusChartRef.value && priorityChartRef.value && timelineChartRef.value;
+
+  if (!canvasRefsReady && retryCount < maxRetries) {
+    console.log(`Charts not ready, retrying... (attempt ${retryCount + 1}/${maxRetries})`);
+    setTimeout(() => initializeCharts(retryCount + 1), 100);
+    return;
+  }
 
   try {
     const themeColors = getChartThemeColors();
 
     // Status chart
     if (statusChartRef.value && chartData.value.statusData.labels.length) {
+      // Ensure the canvas is in the DOM
+      if (!document.contains(statusChartRef.value)) {
+        console.warn('Status chart canvas not yet in DOM');
+        if (retryCount < maxRetries) {
+          setTimeout(() => initializeCharts(retryCount + 1), 100);
+        }
+        return;
+      }
+
       // Destroy existing chart if any
       if (statusChartRef.value._chart) {
         statusChartRef.value._chart.destroy();
@@ -434,6 +460,15 @@ const initializeCharts = () => {
     
     // Priority chart
     if (priorityChartRef.value && chartData.value.priorityData.labels.length) {
+      // Ensure the canvas is in the DOM
+      if (!document.contains(priorityChartRef.value)) {
+        console.warn('Priority chart canvas not yet in DOM');
+        if (retryCount < maxRetries) {
+          setTimeout(() => initializeCharts(retryCount + 1), 100);
+        }
+        return;
+      }
+
       // Destroy existing chart if any
       if (priorityChartRef.value._chart) {
         priorityChartRef.value._chart.destroy();
@@ -502,11 +537,20 @@ const initializeCharts = () => {
     
     // Timeline chart
     if (timelineChartRef.value && chartData.value.timelineData.labels.length) {
+      // Ensure the canvas is in the DOM
+      if (!document.contains(timelineChartRef.value)) {
+        console.warn('Timeline chart canvas not yet in DOM');
+        if (retryCount < maxRetries) {
+          setTimeout(() => initializeCharts(retryCount + 1), 100);
+        }
+        return;
+      }
+
       // Destroy existing chart if any
       if (timelineChartRef.value._chart) {
         timelineChartRef.value._chart.destroy();
       }
-      
+
       timelineChartRef.value._chart = new window.Chart(timelineChartRef.value, {
         type: 'line',
         data: {
@@ -672,9 +716,10 @@ onMounted(() => {
 });
 
 // Watch for route changes
-watch(() => route.fullPath, () => {
+watch(() => route.fullPath, async () => {
   // Only refresh if we're on the dashboard route
-  if (route.name === 'dashboard' || route.path === '/dashboard') {
+  if (route.name === 'dashboard' || route.path === '/dashboard' || route.path === '/') {
+    await nextTick();
     fetchDashboardData();
   }
 });

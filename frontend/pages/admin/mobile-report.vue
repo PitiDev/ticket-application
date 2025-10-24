@@ -613,10 +613,16 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <!-- Recent Sell Transactions -->
           <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
-            <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-              🔄 Recent Sell Transactions
-              <span class="text-sm font-normal text-gray-500">({{ sellTransactions.length }} total)</span>
-            </h3>
+            <div class="flex justify-between items-center mb-6">
+              <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                🔄 Recent Sell Transactions
+                <span class="text-sm font-normal text-gray-500">({{ sellTransactions.length }} total)</span>
+              </h3>
+              <button v-if="sellTransactions.length > 10" @click="showSellTransactionsModal = true"
+                class="px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-sm rounded-lg hover:shadow-lg transition-all duration-200">
+                View All
+              </button>
+            </div>
             <div class="space-y-4 max-h-96 overflow-y-auto">
               <div v-for="transaction in sellTransactions.slice(0, 10)" :key="transaction.TRANSACTION_ID"
                 class="bg-gradient-to-r from-red-50 to-pink-50 rounded-xl p-4 border border-red-100 hover:shadow-md transition-shadow">
@@ -644,10 +650,16 @@
 
           <!-- Recent Buy Transactions -->
           <div class="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100">
-            <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-              🔄 Recent Buy Transactions
-              <span class="text-sm font-normal text-gray-500">({{ buyTransactions.length }} total)</span>
-            </h3>
+            <div class="flex justify-between items-center mb-6">
+              <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                🔄 Recent Buy Transactions
+                <span class="text-sm font-normal text-gray-500">({{ buyTransactions.length }} total)</span>
+              </h3>
+              <button v-if="buyTransactions.length > 10" @click="showBuyTransactionsModal = true"
+                class="px-4 py-2 bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-sm rounded-lg hover:shadow-lg transition-all duration-200">
+                View All
+              </button>
+            </div>
             <div class="space-y-4 max-h-96 overflow-y-auto">
               <div v-for="transaction in buyTransactions.slice(0, 10)" :key="transaction.ID"
                 class="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-4 border border-yellow-100 hover:shadow-md transition-shadow">
@@ -873,7 +885,173 @@
       </div>
     </div>
 
+    <!-- Buy Transactions Modal -->
+    <div v-if="showBuyTransactionsModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      @click.self="showBuyTransactionsModal = false">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-yellow-500 to-amber-500 px-6 py-4 flex justify-between items-center">
+          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+            🔄 All Buy Transactions
+            <span class="text-sm font-normal">({{ filteredBuyTransactions.length }} of {{ buyTransactions.length }})</span>
+          </h2>
+          <button @click="showBuyTransactionsModal = false"
+            class="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all duration-200">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
 
+        <!-- Filters -->
+        <div class="bg-yellow-50 px-6 py-4 border-b border-yellow-200">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Search Customer ID</label>
+              <input v-model="buyTransactionFilters.customer" type="text"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm"
+                placeholder="Enter customer ID...">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Filter by Status</label>
+              <select v-model="buyTransactionFilters.status"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm">
+                <option value="">All Statuses</option>
+                <option value="completed">Completed</option>
+                <option value="pending">Pending</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Filter by Bank</label>
+              <select v-model="buyTransactionFilters.bank"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm">
+                <option value="">All Banks</option>
+                <option value="BCEL">BCEL Bank</option>
+                <option value="LDB">LDB Bank</option>
+                <option value="PSV">PSV Bank</option>
+                <option value="LBB">LBB Bank</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 overflow-y-auto max-h-[calc(90vh-240px)]">
+          <div class="space-y-3">
+            <div v-for="transaction in filteredBuyTransactions" :key="transaction.ID"
+              class="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-4 border border-yellow-100 hover:shadow-md transition-shadow">
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <p class="text-sm text-yellow-700 font-medium mb-1">ID: {{ transaction.ID }}</p>
+                  <p class="text-sm text-gray-700 mb-1">Customer: <span class="font-medium">{{ transaction.CUSTOMER_ID
+                      }}</span></p>
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xs text-gray-500">Status:</span>
+                    <span class="px-2 py-1 rounded-full text-xs font-medium" :class="transaction.STATUS && transaction.STATUS.toLowerCase() === 'completed'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-orange-100 text-orange-700'">
+                      {{ transaction.STATUS || 'N/A' }}
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xs text-gray-500">Bank:</span>
+                    <span class="px-2 py-1 rounded-full text-xs font-medium" :class="{
+                      'bg-green-100 text-green-700': getBankFromDeeplink(transaction.DEEPLINK).color === 'green',
+                      'bg-purple-100 text-purple-700': getBankFromDeeplink(transaction.DEEPLINK).color === 'purple',
+                      'bg-orange-100 text-orange-700': getBankFromDeeplink(transaction.DEEPLINK).color === 'orange',
+                      'bg-blue-100 text-blue-700': getBankFromDeeplink(transaction.DEEPLINK).color === 'blue'
+                    }">
+                      {{ getBankFromDeeplink(transaction.DEEPLINK).name }}
+                    </span>
+                  </div>
+                  <p class="text-xs text-gray-500">{{ formatDate(transaction.CREATED_AT) }}</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-lg font-bold text-yellow-600">{{ formatCurrency(transaction.TOTAL_AMOUNT) }}</p>
+                  <p class="text-sm text-gray-600">{{ formatWeight(transaction.GOLD_WEIGHT) }}g</p>
+                  <p class="text-xs text-gray-500">{{ transaction.DR_CURRENCY_CODE || 'LAK' }}</p>
+                </div>
+              </div>
+            </div>
+            <div v-if="filteredBuyTransactions.length === 0" class="text-center py-8 text-gray-500">
+              <span v-if="buyTransactions.length === 0">No buy transactions found for the selected date range</span>
+              <span v-else>No transactions match the current filters</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sell Transactions Modal -->
+    <div v-if="showSellTransactionsModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      @click.self="showSellTransactionsModal = false">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-red-500 to-pink-500 px-6 py-4 flex justify-between items-center">
+          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+            🔄 All Sell Transactions
+            <span class="text-sm font-normal">({{ filteredSellTransactions.length }} of {{ sellTransactions.length }})</span>
+          </h2>
+          <button @click="showSellTransactionsModal = false"
+            class="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all duration-200">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-red-50 px-6 py-4 border-b border-red-200">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Search Customer ID</label>
+              <input v-model="sellTransactionFilters.customer" type="text"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+                placeholder="Enter customer ID...">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Filter by Status</label>
+              <select v-model="sellTransactionFilters.status"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm">
+                <option value="">All Statuses</option>
+                <option value="completed">Completed</option>
+                <option value="pending">Pending</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+          <div class="space-y-3">
+            <div v-for="transaction in filteredSellTransactions" :key="transaction.TRANSACTION_ID"
+              class="bg-gradient-to-r from-red-50 to-pink-50 rounded-xl p-4 border border-red-100 hover:shadow-md transition-shadow">
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <p class="text-xs font-mono text-red-600 mb-1">{{ transaction.TRANSACTION_ID }}</p>
+                  <p class="text-sm text-gray-700 mb-1">Customer: <span class="font-medium">{{ transaction.CUSTOMER_ID
+                      }}</span></p>
+                  <p class="text-xs text-gray-500">{{ formatDate(transaction.CREATED_AT) }}</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-lg font-bold text-red-600">{{ formatCurrency(transaction.TOTAL_AMOUNT) }}</p>
+                  <p class="text-sm text-gray-600">{{ formatWeight(transaction.GOLD_WEIGHT) }}g</p>
+                  <div v-if="transaction.FEE_AMOUNT > 0" class="text-xs text-gray-500">
+                    Fee: {{ formatCurrency(transaction.FEE_AMOUNT) }}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div v-if="filteredSellTransactions.length === 0" class="text-center py-8 text-gray-500">
+              <span v-if="sellTransactions.length === 0">No sell transactions found for the selected date range</span>
+              <span v-else>No transactions match the current filters</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
   </div>
 </template>
@@ -942,6 +1120,21 @@ export default {
     const loginForm = ref({
       email: '', // Pre-filled
       password: ''
+    })
+
+    // Modal states
+    const showBuyTransactionsModal = ref(false)
+    const showSellTransactionsModal = ref(false)
+
+    // Filter states for modals
+    const buyTransactionFilters = ref({
+      customer: '',
+      status: '',
+      bank: ''
+    })
+    const sellTransactionFilters = ref({
+      customer: '',
+      status: ''
     })
 
     const baseURL = 'http://202.62.106.154:5173/api'
@@ -1056,6 +1249,35 @@ export default {
       })
 
       return bankStats
+    })
+
+    // Filtered transactions for modals
+    const filteredBuyTransactions = computed(() => {
+      return buyTransactions.value.filter(transaction => {
+        const customerMatch = !buyTransactionFilters.value.customer ||
+          transaction.CUSTOMER_ID?.toLowerCase().includes(buyTransactionFilters.value.customer.toLowerCase())
+
+        const statusMatch = !buyTransactionFilters.value.status ||
+          transaction.STATUS?.toLowerCase() === buyTransactionFilters.value.status.toLowerCase()
+
+        const bankName = getBankFromDeeplink(transaction.DEEPLINK).name
+        const bankMatch = !buyTransactionFilters.value.bank ||
+          bankName.toLowerCase().includes(buyTransactionFilters.value.bank.toLowerCase())
+
+        return customerMatch && statusMatch && bankMatch
+      })
+    })
+
+    const filteredSellTransactions = computed(() => {
+      return sellTransactions.value.filter(transaction => {
+        const customerMatch = !sellTransactionFilters.value.customer ||
+          transaction.CUSTOMER_ID?.toLowerCase().includes(sellTransactionFilters.value.customer.toLowerCase())
+
+        const statusMatch = !sellTransactionFilters.value.status ||
+          transaction.STATUS?.toLowerCase() === sellTransactionFilters.value.status.toLowerCase()
+
+        return customerMatch && statusMatch
+      })
     })
 
     // Login API call
@@ -2248,7 +2470,13 @@ export default {
       loginError,
       loginForm,
       handleLogin,
-      checkAuthStatus
+      checkAuthStatus,
+      showBuyTransactionsModal,
+      showSellTransactionsModal,
+      buyTransactionFilters,
+      sellTransactionFilters,
+      filteredBuyTransactions,
+      filteredSellTransactions
     }
   }
 }

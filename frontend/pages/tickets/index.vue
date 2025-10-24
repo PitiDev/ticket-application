@@ -35,7 +35,10 @@ import {
   ArrowPathIcon,
   TrashIcon,
   CheckIcon,
-  ChevronUpDownIcon
+  ChevronUpDownIcon,
+  Squares2X2Icon,
+  ListBulletIcon,
+  UserIcon
 } from "@heroicons/vue/24/outline";
 
 import { ChevronDownIcon } from '@heroicons/vue/24/solid';
@@ -57,6 +60,7 @@ const selectedDepartment = ref("all");
 const selectedFiles = ref([]);
 const uploadProgress = ref(0);
 const dragOver = ref(false);
+const viewMode = ref("list"); // 'grid' or 'list'
 
 // Reference data
 const categories = ref([]);
@@ -477,6 +481,11 @@ function handleFilterChange() {
   fetchTickets();
 }
 
+// Toggle view mode
+function toggleViewMode(mode) {
+  viewMode.value = mode;
+}
+
 // Navigation guard
 definePageMeta({
   middleware: "auth",
@@ -502,7 +511,7 @@ const isFormValid = computed(() => {
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 to-white transition-colors duration-200">
     <!-- Top Header Bar -->
-    <div class="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-amber-200 dark:border-gray-700 shadow-sm backdrop-blur-sm bg-white/95 dark:bg-gray-800/95 rounded-lg transition-colors duration-200">
+    <div class="sticky top-0 z-1 bg-white dark:bg-gray-800 border-b border-amber-200 dark:border-gray-700 shadow-sm backdrop-blur-sm bg-white/95 dark:bg-gray-800/95 rounded-lg transition-colors duration-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 items-center justify-between">
           <!-- Left side -->
@@ -594,14 +603,46 @@ const isFormValid = computed(() => {
             </select>
           </div>
 
-          <div class="ml-auto flex items-center gap-2">
-            <span class="text-sm text-gray-500 dark:text-gray-400">Show:</span>
-            <select v-model="pagination.limit" @change="changeLimit(parseInt($event.target.value))"
-              class="rounded-lg border-amber-200 dark:border-gray-600 text-sm focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:border-amber-300 transition-colors">
-              <option v-for="limit in availableLimits" :key="limit" :value="limit">
-                {{ limit }} items
-              </option>
-            </select>
+          <div class="ml-auto flex items-center gap-4">
+            <!-- View Mode Toggle -->
+            <div class="flex items-center gap-1 bg-amber-50 dark:bg-gray-700 rounded-lg p-1 border border-amber-200 dark:border-gray-600">
+              <button
+                @click="toggleViewMode('grid')"
+                :class="[
+                  'inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200',
+                  viewMode === 'grid'
+                    ? 'bg-white dark:bg-gray-600 text-amber-700 dark:text-amber-400 shadow-sm'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400'
+                ]"
+                title="Grid View"
+              >
+                <Squares2X2Icon class="h-4 w-4 mr-1.5" />
+                Grid
+              </button>
+              <button
+                @click="toggleViewMode('list')"
+                :class="[
+                  'inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200',
+                  viewMode === 'list'
+                    ? 'bg-white dark:bg-gray-600 text-amber-700 dark:text-amber-400 shadow-sm'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400'
+                ]"
+                title="List View"
+              >
+                <ListBulletIcon class="h-4 w-4 mr-1.5" />
+                List
+              </button>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-500 dark:text-gray-400">Show:</span>
+              <select v-model="pagination.limit" @change="changeLimit(parseInt($event.target.value))"
+                class="rounded-lg border-amber-200 dark:border-gray-600 text-sm focus:ring-amber-500 focus:border-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:border-amber-300 transition-colors">
+                <option v-for="limit in availableLimits" :key="limit" :value="limit">
+                  {{ limit }} items
+                </option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -631,10 +672,10 @@ const isFormValid = computed(() => {
         </div>
       </div>
 
-      <!-- Tickets Grid -->
+      <!-- Tickets Display -->
       <div v-else>
-        <!-- Enhanced Card Layout -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Grid View -->
+        <div v-if="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div v-for="ticket in tickets" :key="ticket.id"
             class="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 border border-amber-100 dark:border-gray-700 overflow-hidden hover:scale-[1.02] relative">
             <!-- Gold accent at top -->
@@ -700,6 +741,123 @@ const isFormValid = computed(() => {
                 <ArrowRightIcon class="h-4 w-4 ml-1.5 transition-transform group-hover:translate-x-1" />
               </NuxtLink>
             </div>
+          </div>
+        </div>
+
+        <!-- List View -->
+        <div v-else class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-amber-100 dark:border-gray-700 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-amber-100 dark:divide-gray-700">
+              <thead>
+                <tr class="bg-gradient-to-r from-amber-50 to-red-50 dark:from-gray-700 dark:to-gray-700">
+                  <th class="px-6 py-4 text-left text-xs font-semibold text-amber-800 dark:text-amber-400 uppercase tracking-wider">
+                    Ticket
+                  </th>
+                  <th class="px-6 py-4 text-left text-xs font-semibold text-amber-800 dark:text-amber-400 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th class="px-6 py-4 text-left text-xs font-semibold text-amber-800 dark:text-amber-400 uppercase tracking-wider">
+                    Priority
+                  </th>
+                  <th class="px-6 py-4 text-left text-xs font-semibold text-amber-800 dark:text-amber-400 uppercase tracking-wider">
+                    Department
+                  </th>
+                  <th class="px-6 py-4 text-left text-xs font-semibold text-amber-800 dark:text-amber-400 uppercase tracking-wider">
+                    Assigned To
+                  </th>
+                  <th class="px-6 py-4 text-left text-xs font-semibold text-amber-800 dark:text-amber-400 uppercase tracking-wider">
+                    Created
+                  </th>
+                  <th class="px-6 py-4 text-center text-xs font-semibold text-amber-800 dark:text-amber-400 uppercase tracking-wider">
+                    Action
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-amber-50 dark:divide-gray-700">
+                <tr
+                  v-for="ticket in tickets"
+                  :key="ticket.id"
+                  class="hover:bg-gradient-to-r hover:from-amber-50/50 hover:to-red-50/50 dark:hover:from-gray-700/50 dark:hover:to-gray-700/50 transition-all duration-200"
+                >
+                  <!-- Ticket Info -->
+                  <td class="px-6 py-4">
+                    <div class="flex flex-col">
+                      <span class="text-sm font-bold text-amber-600 dark:text-amber-400">
+                        {{ ticket.ticket_number }}
+                      </span>
+                      <span class="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">
+                        {{ ticket.title }}
+                      </span>
+                      <span class="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
+                        {{ ticket.description }}
+                      </span>
+                    </div>
+                  </td>
+
+                  <!-- Status -->
+                  <td class="px-6 py-4">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium" :class="statusColors[ticket.status_name]">
+                      {{ ticket.status_name }}
+                    </span>
+                  </td>
+
+                  <!-- Priority -->
+                  <td class="px-6 py-4">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium" :class="priorityColors[ticket.priority_name]">
+                      {{ ticket.priority_name }}
+                    </span>
+                  </td>
+
+                  <!-- Department -->
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-2">
+                      <BuildingOfficeIcon class="h-4 w-4 text-amber-500 dark:text-amber-400 flex-shrink-0" />
+                      <span class="text-sm text-gray-900 dark:text-gray-100">
+                        {{ ticket.department_name || 'General' }}
+                      </span>
+                    </div>
+                  </td>
+
+                  <!-- Assigned To -->
+                  <td class="px-6 py-4">
+                    <div v-if="ticket.assigned_to_name" class="flex items-center gap-2">
+                      <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900 border border-amber-200 dark:border-amber-700">
+                        <span class="text-xs font-medium text-amber-800 dark:text-amber-300">
+                          {{ ticket.assigned_to_name.charAt(0).toUpperCase() }}
+                        </span>
+                      </span>
+                      <span class="text-sm text-gray-900 dark:text-gray-100">
+                        {{ ticket.assigned_full_name || ticket.assigned_to_name }}
+                      </span>
+                    </div>
+                    <span v-else class="text-sm text-gray-400 dark:text-gray-500 italic">
+                      Unassigned
+                    </span>
+                  </td>
+
+                  <!-- Created Date -->
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-2">
+                      <CalendarIcon class="h-4 w-4 text-amber-500 dark:text-amber-400 flex-shrink-0" />
+                      <span class="text-sm text-gray-600 dark:text-gray-300">
+                        {{ formatDate(ticket.created_at) }}
+                      </span>
+                    </div>
+                  </td>
+
+                  <!-- Action -->
+                  <td class="px-6 py-4 text-center">
+                    <NuxtLink
+                      :to="`/tickets/${ticket.id}`"
+                      class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-700 hover:to-red-700 shadow-sm transition-all duration-200"
+                    >
+                      View
+                      <ArrowRightIcon class="h-4 w-4 ml-1" />
+                    </NuxtLink>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
@@ -1179,6 +1337,7 @@ const isFormValid = computed(() => {
 .line-clamp-1 {
   display: -webkit-box;
   -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1186,6 +1345,7 @@ const isFormValid = computed(() => {
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
