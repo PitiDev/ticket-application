@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # Backend Service
+  backend:
+    image: ${BACKEND_IMAGE:-devops.laobullionbank.com/ticket-app/backend:latest}
+    container_name: ticket-backend-staging
+    restart: unless-stopped
+    ports:
+      - "9001:9000"
+    environment:
+      - NODE_ENV=staging
+      - PORT=9000
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_SECURE=${MAIL_SECURE}
+      - MAIL_USER=${MAIL_USER}
+      - MAIL_PASS=${MAIL_PASS}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME}
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS}
+    depends_on:
+      - db
+    networks:
+      - ticket-network-staging
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/logs:/app/logs
+
+  # Frontend Service
+  frontend:
+    image: ${FRONTEND_IMAGE:-devops.laobullionbank.com/ticket-app/frontend:latest}
+    container_name: ticket-frontend-staging
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=staging
+      - NUXT_PUBLIC_API_BASE=${NUXT_PUBLIC_API_BASE:-http://localhost:9001/api}
+    depends_on:
+      - backend
+    networks:
+      - ticket-network-staging
+
+  # Database Service
+  db:
+    image: mysql:8.0
+    container_name: ticket-db-staging
+    restart: unless-stopped
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - db-data-staging:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - ticket-network-staging
+
+networks:
+  ticket-network-staging:
+    driver: bridge
+
+volumes:
+  db-data-staging:
+    driver: local

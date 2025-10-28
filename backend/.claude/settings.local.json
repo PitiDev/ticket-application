@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/pitiphanthasombath/Desktop/Me/ticket-application/frontend/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

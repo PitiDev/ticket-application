@@ -15,6 +15,8 @@ const io = initializeSocket(server);
 const allowedOrigins = [
   'http://localhost:3000',
   'http://127.0.0.1:3000',
+  'http://172.16.4.62:9000',
+  'http://172.16.4.62:7000',
   'http://ticket.laobullionbank.com',
   'https://ticket.laobullionbank.com',
   process.env.FRONTEND_URL

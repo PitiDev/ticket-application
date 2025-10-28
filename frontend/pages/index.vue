@@ -797,6 +797,61 @@ onUnmounted(() => {
 
       <!-- Dashboard Content -->
       <div v-else class="space-y-8">
+        <!-- Super Admin Menu -->
+        <div v-if="dashboardData.userInfo?.role === 'super_admin'"
+             class="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-gray-800 dark:to-gray-800 rounded-xl p-6 border border-amber-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+            <ChartBarIcon class="h-6 w-6 text-amber-600 dark:text-amber-400" />
+            Quick Reports Access
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- LBB Plus Report -->
+            <NuxtLink to="/admin/mobile-report"
+                      class="group flex items-center gap-4 p-4 bg-white dark:bg-gray-700 rounded-lg border border-amber-200 dark:border-gray-600 hover:border-amber-400 dark:hover:border-amber-500 hover:shadow-md transition-all duration-200">
+              <div class="flex-shrink-0 p-3 bg-gradient-to-br from-amber-500 to-yellow-600 rounded-lg shadow-md group-hover:shadow-lg transition-all duration-200">
+                <ChartBarIcon class="h-6 w-6 text-white" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <h4 class="text-base font-semibold text-gray-900 dark:text-gray-100 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
+                  LBB Plus Report
+                </h4>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Mobile banking analytics</p>
+              </div>
+              <ChevronRightIcon class="h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" />
+            </NuxtLink>
+
+            <!-- Gold Investment Report -->
+            <NuxtLink to="/admin/gold-report"
+                      class="group flex items-center gap-4 p-4 bg-white dark:bg-gray-700 rounded-lg border border-amber-200 dark:border-gray-600 hover:border-amber-400 dark:hover:border-amber-500 hover:shadow-md transition-all duration-200">
+              <div class="flex-shrink-0 p-3 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-lg shadow-md group-hover:shadow-lg transition-all duration-200">
+                <ArrowTrendingUpIcon class="h-6 w-6 text-white" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <h4 class="text-base font-semibold text-gray-900 dark:text-gray-100 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
+                  Gold Investment Report
+                </h4>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Gold investment analytics</p>
+              </div>
+              <ChevronRightIcon class="h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" />
+            </NuxtLink>
+
+            <!-- Core Banking Report -->
+            <a href="http://172.16.0.46:3333/" target="_blank" rel="noopener noreferrer"
+               class="group flex items-center gap-4 p-4 bg-white dark:bg-gray-700 rounded-lg border border-amber-200 dark:border-gray-600 hover:border-amber-400 dark:hover:border-amber-500 hover:shadow-md transition-all duration-200">
+              <div class="flex-shrink-0 p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg shadow-md group-hover:shadow-lg transition-all duration-200">
+                <BuildingOfficeIcon class="h-6 w-6 text-white" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <h4 class="text-base font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">
+                  Core Banking Report
+                </h4>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Banking system analytics</p>
+              </div>
+              <ChevronRightIcon class="h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+            </a>
+          </div>
+        </div>
+
         <!-- Selected Timeframe Display -->
         <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 flex items-center border border-yellow-100 dark:border-yellow-800 transition-colors duration-200">
           <ClockIcon class="h-5 w-5 text-yellow-600 dark:text-yellow-400 mr-2" />
