@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # Backend Service
   backend:
-    image: ${BACKEND_IMAGE:-devops.laobullionbank.com/ticket-app/backend:latest}
+    image: devops.laobullionbank.com/ticket-app/backend:dev
     container_name: ticket-backend-staging
     restart: unless-stopped
     ports:
@@ -34,7 +34,7 @@ services:
 
   # Frontend Service
   frontend:
-    image: ${FRONTEND_IMAGE:-devops.laobullionbank.com/ticket-app/frontend:latest}
+    image: devops.laobullionbank.com/ticket-app/frontend:dev
     container_name: ticket-frontend-staging
     restart: unless-stopped
     ports:

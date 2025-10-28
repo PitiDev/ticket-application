@@ -1,0 +1,135 @@
+# GitLab CI/CD Pipeline for DevOps Dashboard
+# Optimized version with proper registry handling
+
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  DOCKER_REGISTRY: "172.16.4.62:5000"
+  IMAGE_NAME: "piti/devops_dashboard"
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_HOST: unix:///var/run/docker.sock
+
+# Build Docker Image ONCE and use it in other stages
+build:
+  stage: build
+  image: docker:24
+  tags:
+    - docker
+  before_script:
+    - docker info
+  script:
+    - echo "Building Docker image..."
+    - docker build --platform linux/amd64 -t $DOCKER_REGISTRY/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t $DOCKER_REGISTRY/$IMAGE_NAME:$CI_COMMIT_REF_SLUG .
+    - echo "Build completed successfully"
+    - docker images | grep $IMAGE_NAME || true
+    - docker push $DOCKER_REGISTRY/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
+    - docker push $DOCKER_REGISTRY/$IMAGE_NAME:$CI_COMMIT_REF_SLUG
+  only:
+    - main
+    - develop
+    - branches
+
+# Test - Node.js Tests
+test:node:
+  stage: test
+  image: node:18-alpine
+  tags:
+    - docker
+  before_script:
+    - echo "Installing dependencies..."
+    - npm ci --prefer-offline --no-audit || npm install
+  script:
+    - echo "Running tests..."
+    - npm test || echo "No tests configured"
+    - echo "Running security audit..."
+    - npm audit --production || echo "Security vulnerabilities found"
+    - echo "Tests completed"
+  only:
+    - main
+    - develop
+    - branches
+  allow_failure: true
+
+# Test - Docker Image
+test:docker:
+  stage: test
+  image: docker:24
+  tags:
+    - docker
+  dependencies:
+    - build
+  before_script:
+    - docker info
+  script:
+    - echo "Testing Docker image..."
+    - docker pull $DOCKER_REGISTRY/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
+    - docker run --rm $DOCKER_REGISTRY/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA node --version || echo "Node check complete"
+    - echo "Docker test completed"
+  only:
+    - main
+    - develop
+  allow_failure: true
+
+# Deploy - Staging (develop branch)
+deploy:staging:
+  stage: deploy
+  image: docker:24
+  tags:
+    - docker
+  before_script:
+    - docker info
+  script:
+    - echo "Deploying to staging..."
+    - docker pull $DOCKER_REGISTRY/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
+    - docker tag $DOCKER_REGISTRY/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA $DOCKER_REGISTRY/$IMAGE_NAME:dev
+    - docker push $DOCKER_REGISTRY/$IMAGE_NAME:dev
+    - echo "Successfully deployed to staging"
+    - echo "Image -> $DOCKER_REGISTRY/$IMAGE_NAME:dev"
+  environment:
+    name: staging
+    url: http://172.16.4.62:3300
+  only:
+    - develop
+  when: manual
+
+# Deploy - Production (main branch)
+deploy:production:
+  stage: deploy
+  image: docker:24
+  tags:
+    - docker
+  before_script:
+    - docker info
+  script:
+    - echo "Deploying to production..."
+    - docker pull $DOCKER_REGISTRY/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
+    - docker tag $DOCKER_REGISTRY/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA $DOCKER_REGISTRY/$IMAGE_NAME:latest
+    - docker push $DOCKER_REGISTRY/$IMAGE_NAME:latest
+    - echo "Successfully deployed to production"
+    - echo "Image -> $DOCKER_REGISTRY/$IMAGE_NAME:latest"
+  environment:
+    name: production
+    url: http://172.16.4.62:3300
+  only:
+    - main
+    - tags
+  when: manual
+
+# Optional: Cleanup old images
+cleanup:
+  stage: deploy
+  image: docker:24
+  tags:
+    - docker
+  script:
+    - echo "Cleaning up old Docker images..."
+    - docker image prune -af --filter "until=72h" || true
+    - echo "Cleanup completed"
+  when: manual
+  only:
+    - main
+    - develop

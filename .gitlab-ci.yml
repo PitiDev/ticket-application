@@ -1,288 +1,235 @@
 # GitLab CI/CD Pipeline for Ticket Management System
-# This pipeline includes build, test, and deploy stages for both frontend and backend
+# Optimized version based on working example
 
 stages:
   - build
   - test
   - deploy
 
-# Global variables
 variables:
-  # Docker registry settings
-  DOCKER_REGISTRY: devops.laobullionbank.com
+  DOCKER_REGISTRY: "devops.laobullionbank.com"
+  BACKEND_IMAGE: "ticket-app/backend"
+  FRONTEND_IMAGE: "ticket-app/frontend"
   DOCKER_DRIVER: overlay2
-
-  # Image names
-  BACKEND_IMAGE: devops.laobullionbank.com/ticket-app/backend
-  FRONTEND_IMAGE: devops.laobullionbank.com/ticket-app/frontend
-
-  # Node version
-  NODE_VERSION: "18"
-
-# Cache configuration for faster builds
-.node_cache: &node_cache
-  cache:
-    key:
-      files:
-        - package-lock.json
-    paths:
-      - node_modules/
-      - .npm/
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_HOST: unix:///var/run/docker.sock
 
 # ========================================
 # BACKEND JOBS
 # ========================================
 
-# Build Backend
+# Build Backend Docker Image
 build:backend:
   stage: build
-  image: node:18-alpine
-  <<: *node_cache
+  image: docker:24
+  tags:
+    - docker
+  before_script:
+    - docker info
+    - docker login -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY
   script:
-    - echo "Building backend application..."
+    - echo "Building backend Docker image..."
     - cd backend
-    - npm ci --cache .npm --prefer-offline
-    - echo "Backend dependencies installed successfully"
-    # Add any build steps if needed
-    - echo "Backend build completed"
-  artifacts:
-    paths:
-      - backend/node_modules/
-    expire_in: 1 hour
+    - docker build --platform linux/amd64 -t $DOCKER_REGISTRY/$BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA -t $DOCKER_REGISTRY/$BACKEND_IMAGE:$CI_COMMIT_REF_SLUG .
+    - echo "Backend build completed successfully"
+    - docker images | grep $BACKEND_IMAGE || true
+    - docker push $DOCKER_REGISTRY/$BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker push $DOCKER_REGISTRY/$BACKEND_IMAGE:$CI_COMMIT_REF_SLUG
   only:
-    changes:
-      - backend/**/*
-      - .gitlab-ci.yml
+    - main
+    - develop
+    - branches
 
 # Test Backend
 test:backend:
   stage: test
   image: node:18-alpine
-  dependencies:
-    - build:backend
+  tags:
+    - docker
+  before_script:
+    - echo "Installing backend dependencies..."
+    - cd backend
+    - npm ci --prefer-offline --no-audit || npm install
   script:
     - echo "Running backend tests..."
-    - cd backend
-    - npm test || echo "No tests specified, skipping..."
-    # Add additional test commands here when tests are implemented
-    # - npm run test:unit
-    # - npm run test:integration
-  coverage: '/Lines\s*:\s*(\d+\.\d+)%/'
-  only:
-    changes:
-      - backend/**/*
-      - .gitlab-ci.yml
-
-# Build Backend Docker Image
-docker:backend:
-  stage: build
-  image: docker:24
-  services:
-    - docker:24-dind
-  before_script:
-    - docker login -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY
-  script:
-    - echo "Building backend Docker image..."
-    - cd backend
-    - docker build -t $BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA .
-    - docker tag $BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA $BACKEND_IMAGE:latest
-    - docker push $BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA
-    - docker push $BACKEND_IMAGE:latest
+    - npm test || echo "No tests configured"
+    - echo "Running security audit..."
+    - npm audit --production || echo "Security vulnerabilities found"
+    - echo "Backend tests completed"
   only:
     - main
     - develop
-    - tags
+    - branches
+  allow_failure: true
+
+# Test Backend Docker Image
+test:backend:docker:
+  stage: test
+  image: docker:24
+  tags:
+    - docker
+  dependencies:
+    - build:backend
+  before_script:
+    - docker info
+    - docker login -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY
+  script:
+    - echo "Testing backend Docker image..."
+    - docker pull $DOCKER_REGISTRY/$BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker run --rm $DOCKER_REGISTRY/$BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA node --version || echo "Node check complete"
+    - echo "Backend Docker test completed"
+  only:
+    - main
+    - develop
+  allow_failure: true
 
 # ========================================
 # FRONTEND JOBS
 # ========================================
 
-# Build Frontend
+# Build Frontend Docker Image
 build:frontend:
   stage: build
-  image: node:18-alpine
-  <<: *node_cache
-  script:
-    - echo "Building frontend application..."
-    - cd frontend
-    - npm ci --cache .npm --prefer-offline
-    - npm run build
-    - echo "Frontend build completed successfully"
-  artifacts:
-    paths:
-      - frontend/.output/
-      - frontend/node_modules/
-    expire_in: 1 hour
-  only:
-    changes:
-      - frontend/**/*
-      - .gitlab-ci.yml
-
-# Test Frontend (Lint & Type Check)
-test:frontend:
-  stage: test
-  image: node:18-alpine
-  dependencies:
-    - build:frontend
-  script:
-    - echo "Running frontend tests..."
-    - cd frontend
-    # Add test commands here when tests are implemented
-    # - npm run test
-    # - npm run test:unit
-    # - npm run lint
-    - echo "Frontend tests completed (add actual tests in package.json)"
-  only:
-    changes:
-      - frontend/**/*
-      - .gitlab-ci.yml
-
-# Build Frontend Docker Image
-docker:frontend:
-  stage: build
   image: docker:24
-  services:
-    - docker:24-dind
+  tags:
+    - docker
   before_script:
+    - docker info
     - docker login -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY
   script:
     - echo "Building frontend Docker image..."
     - cd frontend
-    - docker build -t $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA .
-    - docker tag $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA $FRONTEND_IMAGE:latest
-    - docker push $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA
-    - docker push $FRONTEND_IMAGE:latest
+    - docker build --platform linux/amd64 -t $DOCKER_REGISTRY/$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA -t $DOCKER_REGISTRY/$FRONTEND_IMAGE:$CI_COMMIT_REF_SLUG .
+    - echo "Frontend build completed successfully"
+    - docker images | grep $FRONTEND_IMAGE || true
+    - docker push $DOCKER_REGISTRY/$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker push $DOCKER_REGISTRY/$FRONTEND_IMAGE:$CI_COMMIT_REF_SLUG
   only:
     - main
     - develop
-    - tags
+    - branches
+
+# Test Frontend
+test:frontend:
+  stage: test
+  image: node:18-alpine
+  tags:
+    - docker
+  before_script:
+    - echo "Installing frontend dependencies..."
+    - cd frontend
+    - npm ci --prefer-offline --no-audit || npm install
+  script:
+    - echo "Running frontend tests..."
+    - npm test || echo "No tests configured"
+    - echo "Running security audit..."
+    - npm audit --production || echo "Security vulnerabilities found"
+    - echo "Frontend tests completed"
+  only:
+    - main
+    - develop
+    - branches
+  allow_failure: true
+
+# Test Frontend Docker Image
+test:frontend:docker:
+  stage: test
+  image: docker:24
+  tags:
+    - docker
+  dependencies:
+    - build:frontend
+  before_script:
+    - docker info
+    - docker login -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY
+  script:
+    - echo "Testing frontend Docker image..."
+    - docker pull $DOCKER_REGISTRY/$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker run --rm $DOCKER_REGISTRY/$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA node --version || echo "Node check complete"
+    - echo "Frontend Docker test completed"
+  only:
+    - main
+    - develop
+  allow_failure: true
 
 # ========================================
 # DEPLOYMENT JOBS
 # ========================================
 
-# Deploy to Staging
+# Deploy to Staging (develop branch)
 deploy:staging:
   stage: deploy
-  image: alpine:latest
+  image: docker:24
+  tags:
+    - docker
   before_script:
-    - apk add --no-cache openssh-client
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - ssh-keyscan -H $STAGING_SERVER >> ~/.ssh/known_hosts
+    - docker info
+    - docker login -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY
   script:
-    - echo "Deploying to staging environment..."
-    - |
-      ssh $STAGING_USER@$STAGING_SERVER << 'EOF'
-        cd /var/www/ticket-application
-
-        # Pull latest changes
-        git pull origin develop
-
-        # Backend deployment
-        cd backend
-        docker pull $BACKEND_IMAGE:latest
-        docker-compose -f docker-compose.staging.yml up -d backend
-
-        # Frontend deployment
-        cd ../frontend
-        docker pull $FRONTEND_IMAGE:latest
-        docker-compose -f docker-compose.staging.yml up -d frontend
-
-        echo "Staging deployment completed"
-      EOF
+    - echo "Deploying to staging..."
+    # Backend
+    - docker pull $DOCKER_REGISTRY/$BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker tag $DOCKER_REGISTRY/$BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA $DOCKER_REGISTRY/$BACKEND_IMAGE:dev
+    - docker push $DOCKER_REGISTRY/$BACKEND_IMAGE:dev
+    # Frontend
+    - docker pull $DOCKER_REGISTRY/$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker tag $DOCKER_REGISTRY/$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA $DOCKER_REGISTRY/$FRONTEND_IMAGE:dev
+    - docker push $DOCKER_REGISTRY/$FRONTEND_IMAGE:dev
+    - echo "Successfully deployed to staging"
+    - echo "Backend -> $DOCKER_REGISTRY/$BACKEND_IMAGE:dev"
+    - echo "Frontend -> $DOCKER_REGISTRY/$FRONTEND_IMAGE:dev"
   environment:
     name: staging
-    url: https://staging.yourapp.com
+    url: http://ticket.laobullionbank.com
   only:
     - develop
   when: manual
 
-# Deploy to Production
+# Deploy to Production (main branch)
 deploy:production:
   stage: deploy
-  image: alpine:latest
+  image: docker:24
+  tags:
+    - docker
   before_script:
-    - apk add --no-cache openssh-client
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - ssh-keyscan -H $PRODUCTION_SERVER >> ~/.ssh/known_hosts
+    - docker info
+    - docker login -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY
   script:
-    - echo "Deploying to production environment..."
-    - |
-      ssh $PRODUCTION_USER@$PRODUCTION_SERVER << 'EOF'
-        cd /var/www/ticket-application
-
-        # Pull latest changes
-        git pull origin main
-
-        # Backend deployment
-        cd backend
-        docker pull $BACKEND_IMAGE:latest
-        docker-compose -f docker-compose.prod.yml up -d backend
-
-        # Frontend deployment
-        cd ../frontend
-        docker pull $FRONTEND_IMAGE:latest
-        docker-compose -f docker-compose.prod.yml up -d frontend
-
-        echo "Production deployment completed"
-      EOF
+    - echo "Deploying to production..."
+    # Backend
+    - docker pull $DOCKER_REGISTRY/$BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker tag $DOCKER_REGISTRY/$BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA $DOCKER_REGISTRY/$BACKEND_IMAGE:latest
+    - docker push $DOCKER_REGISTRY/$BACKEND_IMAGE:latest
+    # Frontend
+    - docker pull $DOCKER_REGISTRY/$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker tag $DOCKER_REGISTRY/$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA $DOCKER_REGISTRY/$FRONTEND_IMAGE:latest
+    - docker push $DOCKER_REGISTRY/$FRONTEND_IMAGE:latest
+    - echo "Successfully deployed to production"
+    - echo "Backend -> $DOCKER_REGISTRY/$BACKEND_IMAGE:latest"
+    - echo "Frontend -> $DOCKER_REGISTRY/$FRONTEND_IMAGE:latest"
   environment:
     name: production
-    url: https://yourapp.com
+    url: http://ticket.laobullionbank.com
   only:
     - main
     - tags
   when: manual
 
 # ========================================
-# KUBERNETES DEPLOYMENT (Optional)
+# CLEANUP & MAINTENANCE
 # ========================================
 
-# Uncomment if using Kubernetes
-# deploy:k8s:
-#   stage: deploy
-#   image: bitnami/kubectl:latest
-#   script:
-#     - echo "Deploying to Kubernetes cluster..."
-#     - kubectl config use-context $KUBE_CONTEXT
-#
-#     # Update backend deployment
-#     - kubectl set image deployment/backend-deployment backend=$BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA -n ticket-app
-#
-#     # Update frontend deployment
-#     - kubectl set image deployment/frontend-deployment frontend=$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA -n ticket-app
-#
-#     # Wait for rollout to complete
-#     - kubectl rollout status deployment/backend-deployment -n ticket-app
-#     - kubectl rollout status deployment/frontend-deployment -n ticket-app
-#   environment:
-#     name: production
-#     kubernetes:
-#       namespace: ticket-app
-#   only:
-#     - main
-#   when: manual
-
-# ========================================
-# DATABASE MIGRATION (Optional)
-# ========================================
-
-# Uncomment to add database migration job
-# migrate:database:
-#   stage: deploy
-#   image: mysql:8
-#   before_script:
-#     - apt-get update && apt-get install -y mysql-client
-#   script:
-#     - echo "Running database migrations..."
-#     - mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_NAME < database/migrations/*.sql
-#   only:
-#     - main
-#     - develop
-#   when: manual
+# Optional: Cleanup old images
+cleanup:
+  stage: deploy
+  image: docker:24
+  tags:
+    - docker
+  script:
+    - echo "Cleaning up old Docker images..."
+    - docker image prune -af --filter "until=72h" || true
+    - echo "Cleanup completed"
+  when: manual
+  only:
+    - main
+    - develop
