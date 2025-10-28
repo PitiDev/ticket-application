@@ -26,7 +26,7 @@ build:backend:
     - docker
   before_script:
     - docker info
-    - docker login -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY
+    - echo "$DOCKER_REGISTRY_PASSWORD" | docker login -u "$DOCKER_REGISTRY_USER" --password-stdin "$DOCKER_REGISTRY"
   script:
     - echo "Building backend Docker image..."
     - cd backend
@@ -72,7 +72,7 @@ test:backend:docker:
     - build:backend
   before_script:
     - docker info
-    - docker login -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY
+    - echo "$DOCKER_REGISTRY_PASSWORD" | docker login -u "$DOCKER_REGISTRY_USER" --password-stdin "$DOCKER_REGISTRY"
   script:
     - echo "Testing backend Docker image..."
     - docker pull $DOCKER_REGISTRY/$BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA
@@ -95,7 +95,7 @@ build:frontend:
     - docker
   before_script:
     - docker info
-    - docker login -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY
+    - echo "$DOCKER_REGISTRY_PASSWORD" | docker login -u "$DOCKER_REGISTRY_USER" --password-stdin "$DOCKER_REGISTRY"
   script:
     - echo "Building frontend Docker image..."
     - cd frontend
@@ -141,7 +141,7 @@ test:frontend:docker:
     - build:frontend
   before_script:
     - docker info
-    - docker login -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY
+    - echo "$DOCKER_REGISTRY_PASSWORD" | docker login -u "$DOCKER_REGISTRY_USER" --password-stdin "$DOCKER_REGISTRY"
   script:
     - echo "Testing frontend Docker image..."
     - docker pull $DOCKER_REGISTRY/$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA
@@ -164,7 +164,7 @@ deploy:staging:
     - docker
   before_script:
     - docker info
-    - docker login -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY
+    - echo "$DOCKER_REGISTRY_PASSWORD" | docker login -u "$DOCKER_REGISTRY_USER" --password-stdin "$DOCKER_REGISTRY"
   script:
     - echo "Deploying to staging..."
     # Backend
@@ -193,7 +193,7 @@ deploy:production:
     - docker
   before_script:
     - docker info
-    - docker login -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_PASSWORD $DOCKER_REGISTRY
+    - echo "$DOCKER_REGISTRY_PASSWORD" | docker login -u "$DOCKER_REGISTRY_USER" --password-stdin "$DOCKER_REGISTRY"
   script:
     - echo "Deploying to production..."
     # Backend
