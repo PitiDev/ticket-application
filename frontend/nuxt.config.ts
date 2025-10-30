@@ -12,7 +12,7 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      apiBase: 'http://172.16.4.62:9000/api' //http://172.16.4.62:9000/api
+      apiBase: 'https://ticket.laobullionbank.com/api' //https://ticket.laobullionbank.com/api
     }
   },
 

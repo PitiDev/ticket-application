@@ -189,7 +189,7 @@ const selectedTemplate = computed(() => {
 // Methods
 const fetchTemplates = async () => {
   try {
-    const response = await fetch('http://172.16.4.62:9000/api/eod/templates', {
+    const response = await fetch('https://ticket.laobullionbank.com/api/eod/templates', {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
@@ -209,7 +209,7 @@ const fetchTemplates = async () => {
 
 const fetchBranches = async () => {
   try {
-    const response = await fetch('http://172.16.4.62:9000/api/branches', {
+    const response = await fetch('https://ticket.laobullionbank.com/api/branches', {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
@@ -234,7 +234,7 @@ const fetchTemplateItems = async () => {
   }
   
   try {
-    const response = await fetch(`http://172.16.4.62:9000/api/eod/templates/${formData.value.template_id}/items`, {
+    const response = await fetch(`https://ticket.laobullionbank.com/api/eod/templates/${formData.value.template_id}/items`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
@@ -269,7 +269,7 @@ const createSession = async () => {
   loading.value = true;
   
   try {
-    const response = await fetch('http://172.16.4.62:9000/api/eod/sessions', {
+    const response = await fetch('https://ticket.laobullionbank.com/api/eod/sessions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

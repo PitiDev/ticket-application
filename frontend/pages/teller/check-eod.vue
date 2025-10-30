@@ -404,7 +404,7 @@ const fetchEodData = async () => {
   loading.value = true;
 
   try {
-    const response = await fetch(`http://172.16.4.62:9000/api/eod/date/${selectedDate.value}`, {
+    const response = await fetch(`https://ticket.laobullionbank.com/api/eod/date/${selectedDate.value}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
@@ -431,7 +431,7 @@ const fetchCurrentDay = async () => {
   loading.value = true;
 
   try {
-    const response = await fetch('http://172.16.4.62:9000/api/eod/current', {
+    const response = await fetch('https://ticket.laobullionbank.com/api/eod/current', {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
@@ -460,7 +460,7 @@ const viewChecklistDetails = async (checklistId) => {
   checklistDetails.value = null;
 
   try {
-    const response = await fetch(`http://172.16.4.62:9000/api/eod/checklist/${checklistId}`, {
+    const response = await fetch(`https://ticket.laobullionbank.com/api/eod/checklist/${checklistId}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }

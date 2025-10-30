@@ -440,7 +440,7 @@ import {
 const config = useRuntimeConfig();
 const router = useRouter();
 const toast = useToast();
-const apiBaseUrl = 'http://172.16.4.62:9000/api';
+const apiBaseUrl = 'https://ticket.laobullionbank.com/api';
 
 // States
 const loading = ref(true);

@@ -185,7 +185,7 @@ const fetchChecklistDetails = async () => {
   error.value = '';
 
   try {
-    const response = await fetch(`http://172.16.4.62:9000/api/eod/checklist/${checklistId.value}`, {
+    const response = await fetch(`https://ticket.laobullionbank.com/api/eod/checklist/${checklistId.value}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
@@ -218,7 +218,7 @@ const fetchChecklistDetails = async () => {
 const fetchCurrentUser = async () => {
   try {
     // First try the /me endpoint which might be more reliable
-    const response = await fetch('http://172.16.4.62:9000/api/users/me', {
+    const response = await fetch('https://ticket.laobullionbank.com/api/users/me', {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
@@ -285,7 +285,7 @@ const updateChecklist = async () => {
         formData.append('checklist_item_id', itemId);
         formData.append('checklist_id', checklistId.value);
 
-        const uploadResponse = await fetch('http://172.16.4.62:9000/api/eod/attachments', {
+        const uploadResponse = await fetch('https://ticket.laobullionbank.com/api/eod/attachments', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -319,7 +319,7 @@ const updateChecklist = async () => {
       }
     });
 
-    const response = await fetch(`http://172.16.4.62:9000/api/eod/checklist/${checklistId.value}`, {
+    const response = await fetch(`https://ticket.laobullionbank.com/api/eod/checklist/${checklistId.value}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

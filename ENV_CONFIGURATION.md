@@ -35,7 +35,7 @@ This file contains all backend-specific settings:
 # Server Configuration
 NODE_ENV=development              # development | production | staging
 PORT=9000                        # Backend server port
-BASE_URL=http://172.16.4.62:9000 # Backend base URL
+BASE_URL=https://ticket.laobullionbank.com # Backend base URL
 
 # Database Configuration
 DB_HOST=172.16.4.62              # Database host (use 'db' for Docker)
@@ -76,7 +76,7 @@ This file contains frontend-specific settings for Nuxt 3:
 
 ```bash
 # API Configuration
-NUXT_PUBLIC_API_BASE=http://172.16.4.62:9000/api # Backend API URL
+NUXT_PUBLIC_API_BASE=https://ticket.laobullionbank.com/api # Backend API URL
 
 # Application URL
 NUXT_PUBLIC_APP_URL=http://ticket.laobullionbank.com
@@ -110,7 +110,7 @@ JWT_SECRET=your_jwt_secret
 FRONTEND_URL=http://ticket.laobullionbank.com
 
 # API Configuration
-NUXT_PUBLIC_API_BASE=http://172.16.4.62:9000/api
+NUXT_PUBLIC_API_BASE=https://ticket.laobullionbank.com/api
 
 # Email Configuration
 MAIL_HOST=smtp.gmail.com
@@ -133,7 +133,7 @@ GEMINI_API_KEY=your_api_key
 - Database: `ticket_system`
 - User: `appuser`
 
-**Backend Server**: `http://172.16.4.62:9000`
+**Backend Server**: `https://ticket.laobullionbank.com`
 - API Endpoint: `/api`
 - Socket.IO: Real-time notifications
 
@@ -228,7 +228,7 @@ NUXT_PUBLIC_API_BASE=http://localhost:9000/api
 
 **Production (same server)**:
 ```bash
-NUXT_PUBLIC_API_BASE=http://172.16.4.62:9000/api
+NUXT_PUBLIC_API_BASE=https://ticket.laobullionbank.com/api
 ```
 
 **Production (different servers)**:

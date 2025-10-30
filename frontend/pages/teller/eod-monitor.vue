@@ -323,7 +323,7 @@ const fetchDateRangeData = async () => {
   
   try {
     // Fetch range data
-    const rangeResponse = await fetch(`http://172.16.4.62:9000/api/eod/range?startDate=${startDate.value}&endDate=${endDate.value}`, {
+    const rangeResponse = await fetch(`https://ticket.laobullionbank.com/api/eod/range?startDate=${startDate.value}&endDate=${endDate.value}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
@@ -338,7 +338,7 @@ const fetchDateRangeData = async () => {
     rangeData.value = rangeResult.data;
     
     // Fetch user performance data
-    const perfResponse = await fetch(`http://172.16.4.62:9000/api/eod/performance?startDate=${startDate.value}&endDate=${endDate.value}`, {
+    const perfResponse = await fetch(`https://ticket.laobullionbank.com/api/eod/performance?startDate=${startDate.value}&endDate=${endDate.value}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
